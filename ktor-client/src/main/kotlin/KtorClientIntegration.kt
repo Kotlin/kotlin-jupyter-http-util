@@ -3,8 +3,6 @@ package org.jetbrains.kotlinx.jupyter.ktor.client
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
-import org.jetbrains.kotlinx.jupyter.api.VariableDeclaration
-import org.jetbrains.kotlinx.jupyter.api.VariableName
 import org.jetbrains.kotlinx.jupyter.api.annotations.JupyterLibrary
 import org.jetbrains.kotlinx.jupyter.api.declare
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration

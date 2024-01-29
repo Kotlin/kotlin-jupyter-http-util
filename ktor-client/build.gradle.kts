@@ -5,23 +5,22 @@ plugins {
     `maven-publish`
 }
 
-dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
-    implementation(libs.kotlin.reflect)
-    implementation("com.sealwu.jsontokotlin:library:3.7.4")
-
-    testImplementation(libs.kotlin.test)
-}
-
 kotlinJupyter {
     addApiDependency()
     addScannerDependency()
 }
 
+dependencies {
+    testImplementation(libs.kotlin.test)
+    api(libs.ktor.client.core)
+    runtimeOnly(libs.ktor.client.apache)
+    api(libs.ktor.client.content.negotiation)
+    api(libs.ktor.serialization.kotlinx.json)
+}
+
 tasks.test {
     useJUnitPlatform()
 }
-
 kotlin {
     jvmToolchain(17)
 }
@@ -29,7 +28,7 @@ kotlin {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            this.artifactId = "kotlin-jupyter-json-generation"
+            this.artifactId = "kotlin-jupyter-ktor-client"
             from(components["kotlin"])
         }
     }
