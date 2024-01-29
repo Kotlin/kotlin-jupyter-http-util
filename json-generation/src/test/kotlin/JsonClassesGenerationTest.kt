@@ -1,58 +1,79 @@
 package org.jetbrains.kotlinx.jupyter.json
 
+import kotlinx.serialization.Contextual
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import kotlin.reflect.typeOf
 import kotlin.test.assertEquals
 
 class JsonClassesGenerationTest : JupyterReplTestCase() {
     @Test
-    fun end2end() {
-        @Language("JSON")
-        val json = """
-            {
-              "firstName": "John",
-              "lastName": "Smith",
-              "isAlive": true,
-              "age": 27,
-              "address": {
-                "streetAddress": "21 2nd Street",
-                "city": "New York",
-                "state": "NY",
-                "postalCode": "10021-3100"
-              },
-              "phoneNumbers": [
+    fun person() {
+        end2end(
+            json = """
                 {
-                  "type": "home",
-                  "number": "212 555-1234"
-                },
-                {
-                  "type": "office",
-                  "number": "646 555-4567"
+                  "firstName": "John",
+                  "lastName": "Smith",
+                  "isAlive": true,
+                  "age": 27,
+                  "address": {
+                    "streetAddress": "21 2nd Street",
+                    "city": "New York",
+                    "state": "NY",
+                    "postalCode": "10021-3100"
+                  },
+                  "phoneNumbers": [
+                    {"type": "home", "number": "212 555-1234"},
+                    {"type": "office", "number": "646 555-4567"}
+                  ],
+                  "children": ["Catherine", "Thomas", "Trevor"],
+                  "spouse": null
                 }
-              ],
-              "children": [
-                "Catherine",
-                "Thomas",
-                "Trevor"
-              ],
-              "spouse": null
-            }
-        """.trimIndent()
-        exec(
-            """
-            val x = org.jetbrains.kotlinx.jupyter.json.DeserializationResult(${"\""}""
-                $json
-            ${"\""}"", "Person")
-        """
-        )
-        val value = exec(
-            """
-            x   
-        """.trimIndent()
-        )
-        assertEquals(
-            "Person(" +
+            """.trimIndent(),
+            expectedGenerated = """
+                @Serializable
+                data class Person(
+                    @SerialName("firstName")
+                    val firstName: String,
+                    @SerialName("lastName")
+                    val lastName: String,
+                    @SerialName("isAlive")
+                    val isAlive: Boolean,
+                    @SerialName("age")
+                    val age: Int,
+                    @SerialName("address")
+                    val address: Address,
+                    @SerialName("phoneNumbers")
+                    val phoneNumbers: List<PhoneNumber>,
+                    @SerialName("children")
+                    val children: List<String>,
+                    @SerialName("spouse")
+                    val spouse: UntypedAny?
+                )
+                
+                @Serializable
+                data class Address(
+                    @SerialName("streetAddress")
+                    val streetAddress: String,
+                    @SerialName("city")
+                    val city: String,
+                    @SerialName("state")
+                    val state: String,
+                    @SerialName("postalCode")
+                    val postalCode: String
+                )
+                
+                @Serializable
+                data class PhoneNumber(
+                    @SerialName("type")
+                    val type: String,
+                    @SerialName("number")
+                    val number: String
+                )
+            """.trimIndent(),
+            expectedDeserialized = "Person(" +
                 "firstName=John, " +
                 "lastName=Smith, " +
                 "isAlive=true, " +
@@ -61,141 +82,181 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
                 "phoneNumbers=[PhoneNumber(type=home, number=212 555-1234), " +
                 "PhoneNumber(type=office, number=646 555-4567)], " +
                 "children=[Catherine, Thomas, Trevor], " +
-                "spouse=null)", value.toString()
+                "spouse=null)",
+            generatedClassName = "Person",
         )
     }
 
     @Test
-    fun generatedCodeTest() {
+    fun `property type inference`() {
         @Language("JSON")
         val json = """
             {
               "property": "propertyValue",
               "additionalValues": [{
                 "a": "a",
-                "b": [{
-                  "c": "c",
-                  "d": "d"
-                }, {
-                  "c": "c",
-                  "d": null
-                }]
+                "b": [{"c": "c", "d": "d"}, {"c": "c", "d": null}]
               }, {
                 "a": "a",
-                "b": [{
-                  "c": null,
-                  "d": "d"
-                }, {
-                  "c": "c",
-                  "d": "d"
-                }]
+                "b": [{"c": null, "d": "d"}, {"c": "c", "d": "d"}]
               }]
             }
         """.trimIndent()
-        val value = getGeneratedCode(DeserializationResult(json, "Class"))
-
-        assertGeneratedCode("""
-            @Serializable
-            data class Class(
-                @SerialName("property")
-                val `property`: String,
-                @SerialName("additionalValues")
-                val additionalValues: List<AdditionalValue>
-            )
-
-            @Serializable
-            data class AdditionalValue(
-                @SerialName("a")
-                val a: String,
-                @SerialName("b")
-                val b: List<B>
-            )
-
-            @Serializable
-            data class B(
-                @SerialName("c")
-                val c: String?,
-                @SerialName("d")
-                val d: String?
-            )
-        """.trimIndent(), value)
-        println(value)
+        end2end(
+            json = json,
+            expectedGenerated = """
+                @Serializable
+                data class Class(
+                    @SerialName("property")
+                    val `property`: String,
+                    @SerialName("additionalValues")
+                    val additionalValues: List<AdditionalValue>
+                )
+                
+                @Serializable
+                data class AdditionalValue(
+                    @SerialName("a")
+                    val a: String,
+                    @SerialName("b")
+                    val b: List<B>
+                )
+                
+                @Serializable
+                data class B(
+                    @SerialName("c")
+                    val c: String?,
+                    @SerialName("d")
+                    val d: String?
+                )
+            """.trimIndent(),
+            expectedDeserialized = "Class(" +
+                "property=propertyValue, " +
+                "additionalValues=[" +
+                "AdditionalValue(a=a, b=[B(c=c, d=d), B(c=c, d=null)]), " +
+                "AdditionalValue(a=a, b=[B(c=null, d=d), B(c=c, d=d)])" +
+                "])"
+        )
     }
 
     @Test
-    fun generatedCodeTest2() {
-        @Language("JSON")
-        val json = "[{}, {}]"
-        val value = getGeneratedCode(DeserializationResult(json, "Class"))
-
-        assertGeneratedCode("""
-            typealias Class = List<ClassItem>
-
-            @Serializable
-            class ClassItem
-        """.trimIndent(), value)
-        println(value)
+    fun `array with empty objects`() {
+        end2end(
+            json = "[{}, {}]",
+            expectedGenerated = """
+                typealias Class = List<ClassItem>
+                
+                @Serializable
+                data object ClassItem
+            """.trimIndent(),
+            expectedDeserialized = "[ClassItem, ClassItem]",
+        )
     }
 
     @Test
-    fun generatedCodeTest3() {
-        @Language("JSON")
-        val json = "[]"
-        val value = getGeneratedCode(DeserializationResult(json, "Class"))
-
-        assertGeneratedCode("typealias Class = List<@Contextual Any>", value)
-        println(value)
+    fun `empty array`() {
+        end2end(
+            json = "[]",
+            expectedGenerated = "typealias Class = List<UntypedAny?>",
+            expectedDeserialized = "[]",
+        )
     }
 
     @Test
-    fun generatedCodeTest4() {
-        @Language("JSON")
-        val json = "[12]"
-        val value = getGeneratedCode(DeserializationResult(json, "Class"))
-
-        assertGeneratedCode("typealias Class = List<Int>", value)
-        println(value)
+    fun `array with int`() {
+        end2end(
+            json = "[12]",
+            expectedGenerated = "typealias Class = List<Int>",
+            expectedDeserialized = "[12]",
+        )
     }
 
     @Test
-    fun generatedCodeTest5() {
-        @Language("JSON")
-        val json = "12"
-        val value = getGeneratedCode(DeserializationResult(json, "Class"))
-
-        assertEquals("typealias Class = Int", value)
-        println(value)
+    fun int() {
+        end2end(
+            json = "12",
+            expectedGenerated = "typealias Class = Int",
+            expectedDeserialized = "12",
+            addImports = false,
+        )
     }
 
     @Test
-    fun generatedCodeTest7() {
-        @Language("JSON")
-        val json = """
-            [12, ""]
-        """.trimIndent()
-        val value = getGeneratedCode(DeserializationResult(json, "Class"))
-
-        assertGeneratedCode("typealias Class = List<@Contextual Any>", value)
-        println(value)
+    fun `heterogeneous array`() {
+        end2end(
+            json = """
+                [12, ""]
+            """.trimIndent(),
+            expectedGenerated = "typealias Class = List<UntypedAny?>",
+            expectedDeserialized = "[12, ]",
+        )
     }
 
     @Test
-    fun generatedCodeTest6() {
-        @Language("JSON")
-        val json = "[null]"
-        val value = getGeneratedCode(DeserializationResult(json, "Class"))
-
-        assertGeneratedCode("typealias Class = List<@Contextual Any?>", value)
-        println(value)
+    fun `array with null`() {
+        end2end(
+            json = "[null]",
+            expectedGenerated = "typealias Class = List<UntypedAny?>",
+            expectedDeserialized = "[null]",
+        )
     }
 
-    fun assertGeneratedCode(expected: String, actual: String) {
-        assertEquals("""
-            
-            import kotlinx.serialization.SerialName
-            import kotlinx.serialization.Serializable
+    @Test
+    @Disabled("Doesn't work yet")
+    fun `array with objects with property of different types`() {
+        end2end(
+            json = """
+                [{"a": "string"}, {"a": 12}]
+            """.trimIndent(),
+            expectedGenerated = """
+                typealias Class = List<ClassItem>
+                
+                @Serializable
+                data class ClassItem(val a: UntypedAny)
+            """.trimIndent(),
+            expectedDeserialized = "[ClassItem(a=string), ClassItem(a=12)]",
+        )
+    }
 
+    private fun end2end(
+        @Language("JSON") json: String,
+        @Language("kotlin") expectedGenerated: String,
+        expectedDeserialized: String,
+        generatedClassName: String = "Class",
+        addImports: Boolean = true,
+    ) {
+        val value = getGeneratedCode(DeserializationResult(json, generatedClassName))
+        if (addImports) {
+            assertGeneratedCode(expectedGenerated, value)
+        } else {
+            assertEquals(expectedGenerated, value)
+        }
 
-        """.trimIndent() + expected, actual)
+        exec(
+            """
+                val x = org.jetbrains.kotlinx.jupyter.json.DeserializationResult(${"\""}""
+                    $json
+                ${"\""}"", "$generatedClassName")
+            """.trimIndent()
+        )
+        val value2 = exec("x")
+        println(value2?.javaClass)
+        println(typeOf<List<@Contextual Any?>>())
+
+        assertEquals(
+            expected = expectedDeserialized,
+            actual = value2.toString()
+        )
+    }
+
+    private fun assertGeneratedCode(expected: String, actual: String) {
+        assertEquals(
+            """
+                
+                import kotlinx.serialization.SerialName
+                import kotlinx.serialization.Serializable
+    
+    
+            """.trimIndent() + expected, actual
+        )
     }
 }
