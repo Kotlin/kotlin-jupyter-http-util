@@ -35,6 +35,8 @@ class KtorClientIntegration : JupyterIntegration() {
         ktorClient("resources")
         ktorClient("websockets")
 
+        dependencies("io.ktor:ktor-serialization-kotlinx-xml-jvm:$ktorVersion")
+
         import("org.jetbrains.kotlinx.jupyter.ktor.client.*")
 
         onLoaded {
