@@ -45,7 +45,7 @@ class KtorClientIntegration : JupyterIntegration() {
                     })
                 }
             }
-            declare("httpClient" to httpClient)
+            declare("http" to httpClient)
         }
     }
 }
