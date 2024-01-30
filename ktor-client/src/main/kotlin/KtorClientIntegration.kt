@@ -11,26 +11,29 @@ import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
 @JupyterLibrary
 class KtorClientIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
-
         val ktorVersion = "2.3.7"
 
-        dependencies("io.ktor:ktor-client-core-jvm:$ktorVersion")
+        fun ktorClient(artifactName: String) {
+            dependencies("io.ktor:ktor-client-$artifactName-jvm:$ktorVersion")
+        }
+
+        ktorClient("core")
 
         // ktor-client-apache is loaded as a transitive dependency of this artifact,
         // so that it has priority in engine autoselection
-        dependencies("io.ktor:ktor-client-apache5-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-java-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-cio-jvm:$ktorVersion")
+        ktorClient("apache5")
+        ktorClient("java")
+        ktorClient("cio")
 
-        dependencies("io.ktor:ktor-client-auth-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-serialization-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-encoding-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-json-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-gson-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-jackson-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-logging-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-resources-jvm:$ktorVersion")
-        dependencies("io.ktor:ktor-client-websockets-jvm:$ktorVersion")
+        ktorClient("auth")
+        ktorClient("serialization")
+        ktorClient("encoding")
+        ktorClient("json")
+        ktorClient("gson")
+        ktorClient("jackson")
+        ktorClient("logging")
+        ktorClient("resources")
+        ktorClient("websockets")
 
         import("org.jetbrains.kotlinx.jupyter.ktor.client.*")
 
