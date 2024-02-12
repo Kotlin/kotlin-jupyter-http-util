@@ -224,7 +224,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
         generatedClassName: String = "Class",
         addImports: Boolean = true,
     ) {
-        val value = getGeneratedCode(DeserializationResult(json, generatedClassName))
+        val value = getGeneratedCode(DeserializeThis(json, generatedClassName))
         if (addImports) {
             assertGeneratedCode(expectedGenerated, value)
         } else {
@@ -233,7 +233,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
 
         exec(
             """
-                val x = org.jetbrains.kotlinx.jupyter.json.DeserializationResult(${"\""}""
+                val x = ${DeserializeThis::class.qualifiedName}(${"\""}""
                     $json
                 ${"\""}"", "$generatedClassName")
             """.trimIndent()

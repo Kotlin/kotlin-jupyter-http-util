@@ -9,8 +9,8 @@ import wu.seal.jsontokotlin.library.JsonToKotlinBuilder
 import wu.seal.jsontokotlin.model.TargetJsonConverter
 import kotlin.reflect.typeOf
 
-class DeserializationResult(val src: String, val className: String) {
-    override fun toString() = src
+class DeserializeThis(val jsonString: String, val className: String) {
+    override fun toString(): String = jsonString
 }
 
 @JupyterLibrary
@@ -24,7 +24,7 @@ class JsonGenerationIntegration : JupyterIntegration() {
             declare(VariableDeclaration("jsonDeserializer", jsonDeserializer, typeOf<Json>()))
         }
 
-        updateVariable<DeserializationResult> { value, _ ->
+        updateVariable<DeserializeThis> { value, _ ->
             execute(
                 """
                     import kotlinx.serialization.decodeFromString
@@ -32,15 +32,15 @@ class JsonGenerationIntegration : JupyterIntegration() {
                     import org.jetbrains.kotlinx.jupyter.json.UntypedAny
         
                     ${getGeneratedCode(value)}
-                    jsonDeserializer.decodeFromString<${value.className}>(""" + "\"\"\"" + value.src + "\"\"\"" + """)
+                    jsonDeserializer.decodeFromString<${value.className}>(""" + "\"\"\"" + value.jsonString + "\"\"\"" + """)
                 """.trimIndent()
             ).name
         }
     }
 }
 
-internal fun getGeneratedCode(value: DeserializationResult): String {
-    val jsonElement = Json.Default.parseToJsonElement(value.src)
+internal fun getGeneratedCode(value: DeserializeThis): String {
+    val jsonElement = Json.Default.parseToJsonElement(value.jsonString)
     if (jsonElement is JsonPrimitive) {
         return "typealias ${value.className} = " + when {
             jsonElement.isString -> String::class.simpleName
@@ -53,7 +53,7 @@ internal fun getGeneratedCode(value: DeserializationResult): String {
     }
     return JsonToKotlinBuilder()
         .setAnnotationLib(TargetJsonConverter.Serializable)
-        .build(value.src, value.className)
+        .build(value.jsonString, value.className)
         .replace("Any?", "UntypedAny?")
         .replace("<Any>", "<UntypedAny?>")
         .let {
