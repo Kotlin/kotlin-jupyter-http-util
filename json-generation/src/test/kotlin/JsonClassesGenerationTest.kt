@@ -201,6 +201,15 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
     }
 
     @Test
+    fun `incorrect JSON`() {
+        // TODO: Assert error messages
+        assertIncorrectJsonIsHandled("")
+        assertIncorrectJsonIsHandled("[1")
+        assertIncorrectJsonIsHandled("NaN")
+        assertIncorrectJsonIsHandled("""{1:"value"}""")
+    }
+
+    @Test
     @Disabled("Doesn't work yet")
     fun `array with objects with property of different types`() {
         end2end(
@@ -231,21 +240,35 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
             assertEquals(expectedGenerated, value)
         }
 
-        exec(
-            """
-                val x = ${DeserializeThis::class.qualifiedName}(${"\""}""
-                    $json
-                ${"\""}"", "$generatedClassName")
-            """.trimIndent()
-        )
-        val value2 = exec("x")
-        println(value2?.javaClass)
-        println(typeOf<List<@Contextual Any?>>())
+        val value2 = execDeserialization(json, generatedClassName)
 
         assertEquals(
             expected = expectedDeserialized,
             actual = value2.toString()
         )
+    }
+
+    private fun assertIncorrectJsonIsHandled(incorrectJson: String) {
+        val generatedClassName = "Class"
+        val value = execDeserialization(incorrectJson, generatedClassName)
+        assertEquals(
+            expected = DeserializeThis(incorrectJson, generatedClassName),
+            actual = value,
+        )
+    }
+
+    private fun execDeserialization(json: String, generatedClassName: String): Any? {
+        val stringLiteral = if (json.isBlank()) {
+            "\"$json\""
+        } else {
+            """
+                ${"\""}""
+                    $json
+                ${"\""}"".trimIndent()
+            """.trimIndent()
+        }
+        exec("""val x = ${DeserializeThis::class.qualifiedName}($stringLiteral, "$generatedClassName")""")
+        return exec("x")
     }
 
     private fun assertGeneratedCode(expected: String, actual: String) {

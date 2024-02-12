@@ -15,6 +15,17 @@ import kotlin.reflect.typeOf
  */
 public class DeserializeThis(public val jsonString: String, public val className: String) {
     override fun toString(): String = jsonString
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DeserializeThis
+
+        return jsonString == other.jsonString && className == other.className
+    }
+
+    override fun hashCode(): Int = 31 * jsonString.hashCode() + className.hashCode()
 }
 
 /**
@@ -39,16 +50,21 @@ public class JsonGenerationIntegration : JupyterIntegration() {
         }
 
         updateVariableByRuntimeType<DeserializeThis> { value, _ ->
-            execute(
-                """
-                    import kotlinx.serialization.decodeFromString
-                    import kotlinx.serialization.json.*
-                    import org.jetbrains.kotlinx.jupyter.json.UntypedAny
-        
-                    ${getGeneratedCode(value)}
-                    jsonDeserializer.decodeFromString<${value.className}>(""" + "\"\"\"" + value.jsonString + "\"\"\"" + """)
-                """.trimIndent()
-            ).name
+            try {
+                execute(
+                    """
+                        import kotlinx.serialization.decodeFromString
+                        import kotlinx.serialization.json.*
+                        import org.jetbrains.kotlinx.jupyter.json.UntypedAny
+            
+                        ${getGeneratedCode(value)}
+                        jsonDeserializer.decodeFromString<${value.className}>(""" + "\"\"\"" + value.jsonString + "\"\"\"" + """)
+                    """.trimIndent()
+                ).name
+            } catch (e: Exception) {
+                display("Error during deserialization: ${e.cause?.message}", id = null)
+                null
+            }
         }
     }
 }
