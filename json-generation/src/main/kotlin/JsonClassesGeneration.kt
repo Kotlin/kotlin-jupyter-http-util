@@ -38,7 +38,7 @@ public class JsonGenerationIntegration : JupyterIntegration() {
             declare(VariableDeclaration("jsonDeserializer", jsonDeserializer, typeOf<Json>()))
         }
 
-        updateVariable<DeserializeThis> { value, _ ->
+        updateVariableByRuntimeType<DeserializeThis> { value, _ ->
             execute(
                 """
                     import kotlinx.serialization.decodeFromString
