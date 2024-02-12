@@ -19,11 +19,11 @@ class KtorClientIntegration : JupyterIntegration() {
 
         ktorClient("core")
 
-        // ktor-client-apache is loaded as a transitive dependency of this artifact,
-        // so that it has priority in engine autoselection
+        // ktor-client-cio is loaded as a transitive dependency of this artifact,
+        // so that it has priority in engine autoselection (it's currently the most popular engine).
+        ktorClient("apache")
         ktorClient("apache5")
         ktorClient("java")
-        ktorClient("cio")
 
         ktorClient("auth")
         ktorClient("serialization")

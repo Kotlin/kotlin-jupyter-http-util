@@ -16,7 +16,7 @@ dependencyResolutionManagement {
 
             val ktorVersion = "2.3.7"
             library("ktor-client-core", "io.ktor:ktor-client-core-jvm:$ktorVersion")
-            library("ktor-client-apache", "io.ktor:ktor-client-apache-jvm:$ktorVersion")
+            library("ktor-client-cio", "io.ktor:ktor-client-cio-jvm:$ktorVersion")
             library("ktor-client-content-negotiation", "io.ktor:ktor-client-content-negotiation-jvm:$ktorVersion")
             library("ktor-serialization-kotlinx-json", "io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
 
