@@ -20,6 +20,11 @@ dependencyResolutionManagement {
             library("ktor-client-content-negotiation", "io.ktor:ktor-client-content-negotiation-jvm:$ktorVersion")
             library("ktor-serialization-kotlinx-json", "io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
 
+            library("kotlinx-serialization-json", "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.6.2")
+            library("jsontokotlin", "com.sealwu.jsontokotlin:library:3.7.4")
+
+            version("jvm-toolchain", "17")
+
             plugin("kotlin-jupyter-api", "org.jetbrains.kotlin.jupyter.api").version("0.12.0-110")
 
             plugin("ksp", "com.google.devtools.ksp").version("1.9.22-1.0.17")

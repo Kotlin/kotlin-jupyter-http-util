@@ -6,9 +6,9 @@ plugins {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlin.reflect)
-    implementation("com.sealwu.jsontokotlin:library:3.7.4")
+    implementation(libs.jsontokotlin)
 
     testImplementation(libs.kotlin.test)
 }
@@ -23,7 +23,7 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
 }
 
 publishing {
