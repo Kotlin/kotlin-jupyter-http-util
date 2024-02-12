@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.jupyter.api)
-    `maven-publish`
+    publisher
 }
 
 dependencies {
@@ -24,13 +24,4 @@ tasks.test {
 
 kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            this.artifactId = "kotlin-jupyter-json-generation"
-            from(components["kotlin"])
-        }
-    }
 }

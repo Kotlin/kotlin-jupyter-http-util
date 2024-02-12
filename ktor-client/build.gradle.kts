@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.jupyter.api)
-    `maven-publish`
+    publisher
 }
 
 kotlinJupyter {
@@ -22,13 +22,5 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            this.artifactId = "kotlin-jupyter-ktor-client"
-            from(components["kotlin"])
-        }
-    }
+    jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
 }
