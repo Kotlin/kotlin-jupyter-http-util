@@ -24,4 +24,5 @@ tasks.test {
 
 kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
+    explicitApi()
 }

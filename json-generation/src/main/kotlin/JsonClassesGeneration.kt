@@ -9,12 +9,26 @@ import wu.seal.jsontokotlin.library.JsonToKotlinBuilder
 import wu.seal.jsontokotlin.model.TargetJsonConverter
 import kotlin.reflect.typeOf
 
-class DeserializeThis(val jsonString: String, val className: String) {
+/**
+ * Variables that have this type get replaced by deserialized value **in the next cell**.
+ * [className] is a simple name of the class to be generated that [jsonString] will be deserialized into.
+ */
+public class DeserializeThis(public val jsonString: String, public val className: String) {
     override fun toString(): String = jsonString
 }
 
+/**
+ * Usage: declare a variable of [DeserializeThis] type, where some JSON is stored.
+ * In the next cell, this variable will contain the deserialized result.
+ * The classes for deserialization will be generated automatically based on the actual JSON.
+ *
+ * ```kotlin
+ * val user = DeserializeThis("""{"address":{"street","Baker Street","number":"221B"}}""", "User")
+ * // IN THE NEXT CELL:
+ * println(user.address.number + " " + user.address.street)
+ */
 @JupyterLibrary
-class JsonGenerationIntegration : JupyterIntegration() {
+public class JsonGenerationIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
         onLoaded {
             val jsonDeserializer = Json {

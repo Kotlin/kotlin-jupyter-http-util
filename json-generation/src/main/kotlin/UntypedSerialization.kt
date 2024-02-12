@@ -15,9 +15,17 @@ import kotlinx.serialization.json.*
 import kotlinx.serialization.serializer
 
 @Suppress("unused")
-typealias UntypedAny = @Serializable(with = UntypedSerialization::class) Any
+public typealias UntypedAny = @Serializable(with = UntypedSerialization::class) Any
 
-object UntypedSerialization : KSerializer<Any?> {
+/**
+ * This serializer supports deserializing JSON primitives to corresponding Kotlin primitives,
+ * lists to Kotlin [List]`<Any?>` recursively, and objects to Kotlin [Map]`<String, Any?>` recursively.
+ *
+ * It is required when there's no expected type to deserialize into.
+ *
+ * It also supports serializing its outputs back.
+ */
+public object UntypedSerialization : KSerializer<Any?> {
     @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
     override val descriptor: SerialDescriptor
         get() = buildSerialDescriptor(

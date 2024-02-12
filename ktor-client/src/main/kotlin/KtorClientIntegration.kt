@@ -7,9 +7,29 @@ import org.jetbrains.kotlinx.jupyter.api.annotations.JupyterLibrary
 import org.jetbrains.kotlinx.jupyter.api.declare
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
 
-
+/**
+ * Usage:
+ * ```kotlin
+ * // Make HTTP requests
+ * http.get("https://example.org").bodyAsText()
+ *
+ * // Use JSON in requests and deserialize it in responses
+ * http.post("https://example.org") {
+ *     setBody(buildJsonObject {
+ *         put("key", "value")
+ *     })
+ * }.body<MySerializableClass>()
+ *
+ * // Additional configuration
+ * val customClient = http.config {
+ *     install(HttpTimeout) {
+ *         requestTimeoutMillis = 1000
+ *     }
+ * }
+ * ```
+ */
 @JupyterLibrary
-class KtorClientIntegration : JupyterIntegration() {
+public class KtorClientIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
         val ktorVersion = "2.3.7"
 
@@ -43,7 +63,7 @@ class KtorClientIntegration : JupyterIntegration() {
             val httpClient = NotebookHttpClient {
                 install(ContentNegotiation) {
                     json(Json {
-                       ignoreUnknownKeys = true
+                        ignoreUnknownKeys = true
                     })
                 }
             }

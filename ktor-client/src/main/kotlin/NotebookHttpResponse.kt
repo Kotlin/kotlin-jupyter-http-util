@@ -11,7 +11,11 @@ import kotlinx.coroutines.runBlocking
 import java.nio.charset.Charset
 import kotlin.coroutines.CoroutineContext
 
-class NotebookHttpResponse(val ktorResponse: HttpResponse) : HttpResponse() {
+/**
+ * A wrapper around [HttpResponse] ([ktorResponse]).
+ * It has methods that allow accessing response body without requiring suspendable context.
+ */
+public class NotebookHttpResponse(public val ktorResponse: HttpResponse) : HttpResponse() {
     override val call: HttpClientCall get() = ktorResponse.call
     @InternalAPI
     override val content: ByteReadChannel get() = ktorResponse.content
@@ -22,10 +26,10 @@ class NotebookHttpResponse(val ktorResponse: HttpResponse) : HttpResponse() {
     override val status: HttpStatusCode get() = ktorResponse.status
     override val version: HttpProtocolVersion get() = ktorResponse.version
 
-    inline fun <reified T> body(): T = runBlocking { ktorResponse.body() }
-    fun <T> body(typeInfo: TypeInfo): T = runBlocking { ktorResponse.body(typeInfo) }
-    fun bodyAsText(fallbackCharset: Charset = Charsets.UTF_8): String =
+    public inline fun <reified T> body(): T = runBlocking { ktorResponse.body() }
+    public fun <T> body(typeInfo: TypeInfo): T = runBlocking { ktorResponse.body(typeInfo) }
+    public fun bodyAsText(fallbackCharset: Charset = Charsets.UTF_8): String =
         runBlocking { ktorResponse.bodyAsText(fallbackCharset) }
-    fun readBytes(): ByteArray = runBlocking { ktorResponse.readBytes() }
-    fun readBytes(count: Int): ByteArray = runBlocking { ktorResponse.readBytes(count) }
+    public fun readBytes(): ByteArray = runBlocking { ktorResponse.readBytes() }
+    public fun readBytes(count: Int): ByteArray = runBlocking { ktorResponse.readBytes(count) }
 }
