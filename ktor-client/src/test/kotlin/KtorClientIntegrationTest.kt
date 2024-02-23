@@ -11,9 +11,9 @@ class KtorClientIntegrationTest : JupyterReplTestCase() {
     @Test
     fun `default client engine`() {
         val engineName = exec("http.ktorClient.engine")?.javaClass?.simpleName
-        assertEquals("ApacheEngine", engineName)
+        assertEquals("CIOEngine", engineName)
         val engineName2 = exec("io.ktor.client.HttpClient().engine")?.javaClass?.simpleName
-        assertEquals("ApacheEngine", engineName2)
+        assertEquals("CIOEngine", engineName2)
     }
 
     @Test
@@ -23,12 +23,12 @@ class KtorClientIntegrationTest : JupyterReplTestCase() {
                 import io.ktor.client.request.*
                 
                 lazy { 
-                    http.get("http://example.org").body<String>()
-                    http.get("http://example.org") {
+                    http.get("https://example.org").body<String>()
+                    http.get("https://example.org") {
                         header("Authorization", "Basic 123")
                         parameter("param", "value")
                     }.bodyAsText()
-                    http.post("http://example.org") {
+                    http.post("https://example.org") {
                         header("Authorization", "Basic 123")
                         setBody("body")
                     }.readBytes()
@@ -69,20 +69,20 @@ class KtorClientIntegrationTest : JupyterReplTestCase() {
             """.trimIndent()
         )
 
-        val response1 = exec("""client.get("http://example.org").bodyAsText()""")
+        val response1 = exec("""client.get("https://example.org").bodyAsText()""")
         assertEquals(json, response1)
 
-        val response2 = exec("""client.get("http://example.org").body<String>()""")
+        val response2 = exec("""client.get("https://example.org").body<String>()""")
         assertEquals(json, response2)
 
-        val response3 = exec("""client.get("http://example.org").body<JsonElement>()""")
+        val response3 = exec("""client.get("https://example.org").body<JsonElement>()""")
         assertIs<JsonElement>(response3)
         assertEquals(json, response3.toString())
 
-        val response4 = exec("""client.get("http://example.org").body<A>()""")
+        val response4 = exec("""client.get("https://example.org").body<A>()""")
         assertEquals("A(b=b,a=A(b=b,a=null))", response4.toString())
 
-        val response5 = exec("""client.get("http://example.org").readBytes()""")
+        val response5 = exec("""client.get("https://example.org").readBytes()""")
         assertIs<ByteArray>(response5)
         assertEquals(json, response5.toString(Charsets.UTF_8))
     }
