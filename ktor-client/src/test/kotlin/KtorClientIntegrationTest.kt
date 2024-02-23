@@ -3,11 +3,14 @@ package org.jetbrains.kotlinx.jupyter.ktor.client
 import kotlinx.serialization.json.JsonElement
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
+import org.jetbrains.kotlinx.jupyter.testkit.ReplProvider
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-class KtorClientIntegrationTest : JupyterReplTestCase() {
+class KtorClientIntegrationTest : JupyterReplTestCase(
+    replProvider = ReplProvider.withDefaultClasspathResolution(),
+) {
     @Test
     fun `default client engine`() {
         val engineName = exec("http.ktorClient.engine")?.javaClass?.simpleName
@@ -48,7 +51,11 @@ class KtorClientIntegrationTest : JupyterReplTestCase() {
                 %use serialization
                 @file:DependsOn("io.ktor:ktor-client-mock-jvm:2.3.7")
                 
+                import io.ktor.client.engine.mock.*
+                import io.ktor.client.plugins.contentnegotiation.*
                 import io.ktor.http.*
+                import io.ktor.serialization.kotlinx.json.*
+                
                 @Serializable
                 data class A(val b: String, val a: A?)
                 
@@ -69,20 +76,20 @@ class KtorClientIntegrationTest : JupyterReplTestCase() {
             """.trimIndent()
         )
 
-        val response1 = exec("""client.get("https://example.org").bodyAsText()""")
+        val response1 = execRaw("""client.get("https://example.org").bodyAsText()""")
         assertEquals(json, response1)
 
-        val response2 = exec("""client.get("https://example.org").body<String>()""")
+        val response2 = execRaw("""client.get("https://example.org").body<String>()""")
         assertEquals(json, response2)
 
-        val response3 = exec("""client.get("https://example.org").body<JsonElement>()""")
+        val response3 = execRaw("""client.get("https://example.org").body<JsonElement>()""")
         assertIs<JsonElement>(response3)
         assertEquals(json, response3.toString())
 
-        val response4 = exec("""client.get("https://example.org").body<A>()""")
-        assertEquals("A(b=b,a=A(b=b,a=null))", response4.toString())
+        val response4 = execRaw("""client.get("https://example.org").body<A>()""")
+        assertEquals("A(b=b, a=A(b=b, a=null))", response4.toString())
 
-        val response5 = exec("""client.get("https://example.org").readBytes()""")
+        val response5 = execRaw("""client.get("https://example.org").readBytes()""")
         assertIs<ByteArray>(response5)
         assertEquals(json, response5.toString(Charsets.UTF_8))
     }
