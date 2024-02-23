@@ -49,14 +49,14 @@ public class JsonGenerationIntegration : JupyterIntegration() {
             declare(VariableDeclaration("jsonDeserializer", jsonDeserializer, typeOf<Json>()))
         }
 
+        // required for auto-deserialization below
+        import("kotlinx.serialization.decodeFromString")
+        import("org.jetbrains.kotlinx.jupyter.json.UntypedAny")
+
         updateVariableByRuntimeType<DeserializeThis> { value, _ ->
             try {
                 execute(
                     """
-                        import kotlinx.serialization.decodeFromString
-                        import kotlinx.serialization.json.*
-                        import org.jetbrains.kotlinx.jupyter.json.UntypedAny
-            
                         ${getGeneratedCode(value)}
                         jsonDeserializer.decodeFromString<${value.className}>(""" + "\"\"\"" + value.jsonString + "\"\"\"" + """)
                     """.trimIndent()
