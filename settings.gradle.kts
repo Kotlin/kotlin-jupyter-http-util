@@ -4,3 +4,4 @@ plugins {
 rootProject.name = "notebooks-ktor-client"
 include("json-generation")
 include("ktor-client")
+include("ktor-client-json-generation")
