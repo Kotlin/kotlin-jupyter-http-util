@@ -1,6 +1,7 @@
 package org.jetbrains.kotlinx.jupyter.json
 
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
 import org.jetbrains.kotlinx.jupyter.api.*
 import org.jetbrains.kotlinx.jupyter.api.annotations.JupyterLibrary
@@ -53,6 +54,19 @@ public class JsonGenerationIntegration : JupyterIntegration() {
         import("kotlinx.serialization.decodeFromString")
         import("org.jetbrains.kotlinx.jupyter.json.UntypedAny")
 
+        addRenderer(
+            createRenderer(
+                renderCondition = {
+                    val value = it.value
+                    value is String && shouldHighlightAsJson(value) ||
+                        value is DeserializeThis && shouldHighlightAsJson(value.jsonString)
+                },
+                renderAction = { it ->
+                    JSON(it.value as? String ?: (it.value as DeserializeThis).jsonString)
+                },
+            )
+        )
+
         updateVariableByRuntimeType<DeserializeThis> { value, _ ->
             try {
                 execute(
@@ -98,5 +112,15 @@ private fun String.convertArrayClassToTypeAlias(): String {
     val pattern = "class (\\w+) : ArrayList<([\\w @?]+)>\\(\\)".toRegex()
     return pattern.replace(this) { matchResult ->
         "typealias ${matchResult.groupValues[1]} = List<${matchResult.groupValues[2]}>"
+    }
+}
+
+private fun shouldHighlightAsJson(jsonOrNot: String): Boolean {
+    return try {
+        val element = Json.parseToJsonElement(jsonOrNot)
+        ((element as? JsonObject)?.entries?.isNotEmpty() == true ||
+            (element as? JsonArray)?.isNotEmpty() == true)
+    } catch (e: SerializationException) {
+        false // Invalid JSON
     }
 }

@@ -1,12 +1,15 @@
 package org.jetbrains.kotlinx.jupyter.json
 
-import kotlinx.serialization.Contextual
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import org.intellij.lang.annotations.Language
+import org.jetbrains.kotlinx.jupyter.api.MimeTypedResultEx
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import kotlin.reflect.typeOf
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class JsonClassesGenerationTest : JupyterReplTestCase() {
     @Test
@@ -234,6 +237,23 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
             """.trimIndent(),
             expectedDeserialized = "[ClassItem(a=string), ClassItem(a=12)]",
         )
+    }
+
+    @Test
+    fun `json rendering`() {
+        val json = buildJsonObject {
+            put("a", JsonPrimitive("b"))
+        }
+        fun check(input: String) {
+            val res = execRendered(input)
+            val applicationJson = assertIs<MimeTypedResultEx>(res)
+                .toJson(overrideId = null)["data"]
+                ?.let { assertIs<JsonObject>(it)["application/json"] }
+            assertEquals(json, applicationJson)
+        }
+
+        check("\"\"\"$json\"\"\"")
+        check("org.jetbrains.kotlinx.jupyter.json.DeserializeThis(\"\"\"$json\"\"\", \"Class\")")
     }
 
     private fun end2end(
