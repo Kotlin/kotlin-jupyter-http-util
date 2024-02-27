@@ -277,8 +277,8 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
                 ${"\""}"".trimIndent()
             """.trimIndent()
         }
-        exec("""val x = ${DeserializeThis::class.qualifiedName}($stringLiteral, "$generatedClassName")""")
-        return exec("x")
+        execRaw("""val x = ${DeserializeThis::class.qualifiedName}($stringLiteral, "$generatedClassName")""")
+        return execRaw("x")
     }
 
     private fun assertGeneratedCode(expected: String, actual: String) {

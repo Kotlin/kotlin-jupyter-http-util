@@ -13,15 +13,15 @@ class KtorClientIntegrationTest : JupyterReplTestCase(
 ) {
     @Test
     fun `default client engine`() {
-        val engineName = exec("http.ktorClient.engine")?.javaClass?.simpleName
+        val engineName = execRaw("http.ktorClient.engine")?.javaClass?.simpleName
         assertEquals("CIOEngine", engineName)
-        val engineName2 = exec("io.ktor.client.HttpClient().engine")?.javaClass?.simpleName
+        val engineName2 = execRaw("io.ktor.client.HttpClient().engine")?.javaClass?.simpleName
         assertEquals("CIOEngine", engineName2)
     }
 
     @Test
     fun `calls compilation`() {
-        val exec = exec(
+        val exec = execRaw(
             """
                 import io.ktor.client.request.*
                 
@@ -46,7 +46,7 @@ class KtorClientIntegrationTest : JupyterReplTestCase(
     fun `mock calls`() {
         @Language("JSON")
         val json = """{"b":"b","a":{"b":"b","a":null}}"""
-        exec(
+        execRaw(
             """
                 %use serialization
                 @file:DependsOn("io.ktor:ktor-client-mock-jvm:2.3.7")
