@@ -211,6 +211,16 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
 
     @Test
     @Disabled("Doesn't work yet")
+    fun `nullable int array`() {
+        end2end(
+            json = "[12, null]",
+            expectedGenerated = "typealias Class = List<Int?>",
+            expectedDeserialized = "[12, null]",
+        )
+    }
+
+    @Test
+    @Disabled("Doesn't work yet")
     fun `array with objects with property of different types`() {
         end2end(
             json = """
