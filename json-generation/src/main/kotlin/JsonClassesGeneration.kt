@@ -62,7 +62,7 @@ public class JsonGenerationIntegration : JupyterIntegration() {
                     """.trimIndent()
                 ).name
             } catch (e: Exception) {
-                display("Error during deserialization: ${e.cause?.message}", id = null)
+                System.err.println("Error during deserialization: ${e.cause?.message}")
                 null
             }
         }
