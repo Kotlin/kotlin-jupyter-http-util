@@ -6,11 +6,12 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kotlinx.serialization.json)
+    compileOnly(libs.kotlinx.serialization.json)
     implementation(libs.kotlin.reflect)
     implementation(libs.jsontokotlin)
 
     testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlinx.serialization.json)
 }
 
 kotlinJupyter {
