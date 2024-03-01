@@ -50,8 +50,10 @@ public class JsonGenerationIntegration : JupyterIntegration() {
             declare(VariableDeclaration("jsonDeserializer", jsonDeserializer, typeOf<Json>()))
         }
 
+        import("kotlinx.serialization.*")
+        import("kotlinx.serialization.json.*")
+
         // required for auto-deserialization below
-        import("kotlinx.serialization.decodeFromString")
         import("org.jetbrains.kotlinx.jupyter.json.UntypedAny")
 
         addRenderer(
