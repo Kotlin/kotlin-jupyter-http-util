@@ -72,13 +72,11 @@ public class JsonGenerationIntegration : JupyterIntegration() {
         updateVariableByRuntimeType<DeserializeThis> { value, _ ->
             try {
                 execute(
-                    """
-                        ${getGeneratedCode(value)}
-                        jsonDeserializer.decodeFromString<${value.className}>(""" + "\"\"\"" + value.jsonString + "\"\"\"" + """)
-                    """.trimIndent()
+                    getGeneratedCode(value) + "\n" +
+                        "jsonDeserializer.decodeFromString<${value.className}>(\"\"\"${value.jsonString}\"\"\")"
                 ).name
             } catch (e: Exception) {
-                System.err.println("Error during deserialization: ${e.cause?.message}")
+                display("Error during deserialization: ${e.cause?.message}", id = null)
                 null
             }
         }
@@ -118,6 +116,7 @@ private fun String.convertArrayClassToTypeAlias(): String {
 }
 
 private fun shouldHighlightAsJson(jsonOrNot: String): Boolean {
+    if (jsonOrNot.length > 3_000_000) return false
     return try {
         val element = Json.parseToJsonElement(jsonOrNot)
         ((element as? JsonObject)?.entries?.isNotEmpty() == true ||
