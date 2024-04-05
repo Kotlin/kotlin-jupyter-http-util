@@ -301,7 +301,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
             """.trimIndent()
         }
         execRaw(
-            "val $valName = ${DeserializeThis::class.qualifiedName}($stringLiteral, " +
+            "val $valName = $stringLiteral.${String::deserializeJson.name}(" +
                 if (generatedClassName != null) "\"$generatedClassName\")" else "null)"
         )
         return execRaw(valName)

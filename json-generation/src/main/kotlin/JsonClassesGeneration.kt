@@ -32,14 +32,30 @@ public class DeserializeThis(public val jsonString: String, public val className
 }
 
 /**
+ * Variables with values returned by this function get replaced by deserialized value **in the next cell**.
+ * [className] is a simple name of the class to be generated that [jsonString] will be deserialized into.
+ *
+ * Usage:
+ * ```kotlin
+ * val user = """{"address":{"street","Baker Street","number":"221B"}}""".deserializeJson()
+ * // IN THE NEXT CELL:
+ * println(user.address.number + " " + user.address.street)
+ * ```
+ */
+public fun String.deserializeJson(className: String? = null): DeserializeThis {
+    return DeserializeThis(jsonString = this, className = className)
+}
+
+/**
  * Usage: declare a variable of [DeserializeThis] type, where some JSON is stored.
  * In the next cell, this variable will contain the deserialized result.
  * The classes for deserialization will be generated automatically based on the actual JSON.
  *
  * ```kotlin
- * val user = DeserializeThis("""{"address":{"street","Baker Street","number":"221B"}}""", "User")
+ * val user = """{"address":{"street","Baker Street","number":"221B"}}""".deserializeJson()
  * // IN THE NEXT CELL:
  * println(user.address.number + " " + user.address.street)
+ * ```
  */
 @JupyterLibrary
 public class JsonGenerationIntegration : JupyterIntegration() {
@@ -54,6 +70,7 @@ public class JsonGenerationIntegration : JupyterIntegration() {
 
         import("kotlinx.serialization.*")
         import("kotlinx.serialization.json.*")
+        import("org.jetbrains.kotlinx.jupyter.json.deserializeJson")
 
         // required for auto-deserialization below
         import("org.jetbrains.kotlinx.jupyter.json.UntypedAny")
