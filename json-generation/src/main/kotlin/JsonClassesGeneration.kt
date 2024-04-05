@@ -16,7 +16,7 @@ import kotlin.reflect.typeOf
  * Variables that have this type get replaced by deserialized value **in the next cell**.
  * [className] is a simple name of the class to be generated that [jsonString] will be deserialized into.
  */
-public class DeserializeThis(public val jsonString: String, public val className: String) {
+public class DeserializeThis(public val jsonString: String, public val className: String?) {
     override fun toString(): String = jsonString
 
     override fun equals(other: Any?): Boolean {
@@ -71,11 +71,12 @@ public class JsonGenerationIntegration : JupyterIntegration() {
             )
         )
 
-        val fieldHandler = FieldHandlerFactory.createUpdateHandler<DeserializeThis>(TypeDetection.RUNTIME) { value, _ ->
+        val fieldHandler = FieldHandlerFactory.createUpdateHandler<DeserializeThis>(TypeDetection.RUNTIME) { value, prop ->
             try {
+                val className = value.className ?: prop.name.replaceFirstChar(Char::titlecaseChar)
                 execute(
-                    getGeneratedCode(value) + "\n" +
-                        "jsonDeserializer.decodeFromString<${value.className}>(\"\"\"${value.jsonString}\"\"\")"
+                    getGeneratedCode(value.jsonString, className) + "\n" +
+                        "jsonDeserializer.decodeFromString<$className>(\"\"\"${value.jsonString}\"\"\")"
                 ).name
             } catch (e: Exception) {
                 display("Error during deserialization: ${e.cause?.message}", id = null)
@@ -86,10 +87,10 @@ public class JsonGenerationIntegration : JupyterIntegration() {
     }
 }
 
-internal fun getGeneratedCode(value: DeserializeThis): String {
-    val jsonElement = Json.Default.parseToJsonElement(value.jsonString)
+internal fun getGeneratedCode(jsonString: String, className: String): String {
+    val jsonElement = Json.Default.parseToJsonElement(jsonString)
     if (jsonElement is JsonPrimitive) {
-        return "typealias ${value.className} = " + when {
+        return "typealias $className = " + when {
             jsonElement.isString -> String::class.simpleName
             jsonElement.booleanOrNull != null -> Boolean::class.simpleName
             jsonElement.intOrNull != null -> Int::class.simpleName
@@ -100,7 +101,7 @@ internal fun getGeneratedCode(value: DeserializeThis): String {
     }
     return JsonToKotlinBuilder()
         .setAnnotationLib(TargetJsonConverter.Serializable)
-        .build(value.jsonString, value.className)
+        .build(jsonString, className)
         .replace("Any?", "UntypedAny?")
         .replace("<Any>", "<UntypedAny?>")
         .let {

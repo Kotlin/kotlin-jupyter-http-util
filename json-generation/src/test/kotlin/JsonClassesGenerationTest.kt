@@ -1,5 +1,6 @@
 package org.jetbrains.kotlinx.jupyter.json
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -8,6 +9,7 @@ import org.jetbrains.kotlinx.jupyter.api.MimeTypedResultEx
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
@@ -86,7 +88,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
                 "PhoneNumber(type=office, number=646 555-4567)], " +
                 "children=[Catherine, Thomas, Trevor], " +
                 "spouse=null)",
-            generatedClassName = "Person",
+            valName = "person",
         )
     }
 
@@ -109,7 +111,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
             json = json,
             expectedGenerated = """
                 @Serializable
-                data class Class(
+                data class Response(
                     @SerialName("property")
                     val `property`: String,
                     @SerialName("additionalValues")
@@ -132,7 +134,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
                     val d: String?
                 )
             """.trimIndent(),
-            expectedDeserialized = "Class(" +
+            expectedDeserialized = "Response(" +
                 "property=propertyValue, " +
                 "additionalValues=[" +
                 "AdditionalValue(a=a, b=[B(c=c, d=d), B(c=c, d=null)]), " +
@@ -146,12 +148,12 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
         end2end(
             json = "[{}, {}]",
             expectedGenerated = """
-                typealias Class = List<ClassItem>
+                typealias Response = List<ResponseItem>
                 
                 @Serializable
-                data object ClassItem
+                data object ResponseItem
             """.trimIndent(),
-            expectedDeserialized = "[ClassItem, ClassItem]",
+            expectedDeserialized = "[ResponseItem, ResponseItem]",
         )
     }
 
@@ -159,7 +161,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
     fun `empty array`() {
         end2end(
             json = "[]",
-            expectedGenerated = "typealias Class = List<UntypedAny?>",
+            expectedGenerated = "typealias Response = List<UntypedAny?>",
             expectedDeserialized = "[]",
         )
     }
@@ -168,7 +170,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
     fun `array with int`() {
         end2end(
             json = "[12]",
-            expectedGenerated = "typealias Class = List<Int>",
+            expectedGenerated = "typealias Response = List<Int>",
             expectedDeserialized = "[12]",
         )
     }
@@ -177,7 +179,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
     fun int() {
         end2end(
             json = "12",
-            expectedGenerated = "typealias Class = Int",
+            expectedGenerated = "typealias Response = Int",
             expectedDeserialized = "12",
             addImports = false,
         )
@@ -189,7 +191,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
             json = """
                 [12, ""]
             """.trimIndent(),
-            expectedGenerated = "typealias Class = List<UntypedAny?>",
+            expectedGenerated = "typealias Response = List<UntypedAny?>",
             expectedDeserialized = "[12, ]",
         )
     }
@@ -198,7 +200,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
     fun `array with null`() {
         end2end(
             json = "[null]",
-            expectedGenerated = "typealias Class = List<UntypedAny?>",
+            expectedGenerated = "typealias Response = List<UntypedAny?>",
             expectedDeserialized = "[null]",
         )
     }
@@ -217,7 +219,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
     fun `nullable int array`() {
         end2end(
             json = "[12, null]",
-            expectedGenerated = "typealias Class = List<Int?>",
+            expectedGenerated = "typealias Response = List<Int?>",
             expectedDeserialized = "[12, null]",
         )
     }
@@ -230,12 +232,12 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
                 [{"a": "string"}, {"a": 12}]
             """.trimIndent(),
             expectedGenerated = """
-                typealias Class = List<ClassItem>
+                typealias Response = List<ResponseItem>
                 
                 @Serializable
-                data class ClassItem(val a: UntypedAny)
+                data class ResponseItem(val a: UntypedAny)
             """.trimIndent(),
-            expectedDeserialized = "[ClassItem(a=string), ClassItem(a=12)]",
+            expectedDeserialized = "[ResponseItem(a=string), ResponseItem(a=12)]",
         )
     }
 
@@ -260,17 +262,18 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
         @Language("JSON") json: String,
         @Language("kotlin") expectedGenerated: String,
         expectedDeserialized: String,
-        generatedClassName: String = "Class",
+        valName: String = "response",
+        generatedClassName: String? = null,
         addImports: Boolean = true,
     ) {
-        val value = getGeneratedCode(DeserializeThis(json, generatedClassName))
+        val value = getGeneratedCode(json, generatedClassName ?: valName.replaceFirstChar(kotlin.Char::titlecaseChar))
         if (addImports) {
             assertGeneratedCode(expectedGenerated, value)
         } else {
             assertEquals(expectedGenerated, value)
         }
 
-        val value2 = execDeserialization(json, generatedClassName)
+        val value2 = execDeserialization(json = json, valName = valName, generatedClassName = generatedClassName)
 
         assertEquals(
             expected = expectedDeserialized,
@@ -280,14 +283,14 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
 
     private fun assertIncorrectJsonIsHandled(incorrectJson: String) {
         val generatedClassName = "Class"
-        val value = execDeserialization(incorrectJson, generatedClassName)
+        val value = execDeserialization(incorrectJson, valName = "x", generatedClassName = generatedClassName)
         assertEquals(
-            expected = DeserializeThis(incorrectJson, generatedClassName),
+            expected = DeserializeThis(incorrectJson, className = generatedClassName),
             actual = value,
         )
     }
 
-    private fun execDeserialization(json: String, generatedClassName: String): Any? {
+    private fun execDeserialization(json: String, valName: String, generatedClassName: String? = null): Any? {
         val stringLiteral = if (json.isBlank()) {
             "\"$json\""
         } else {
@@ -297,8 +300,11 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
                 ${"\""}"".trimIndent()
             """.trimIndent()
         }
-        execRaw("""val x = ${DeserializeThis::class.qualifiedName}($stringLiteral, "$generatedClassName")""")
-        return execRaw("x")
+        execRaw(
+            "val $valName = ${DeserializeThis::class.qualifiedName}($stringLiteral, " +
+                if (generatedClassName != null) "\"$generatedClassName\")" else "null)"
+        )
+        return execRaw(valName)
     }
 
     private fun assertGeneratedCode(expected: String, actual: String) {

@@ -13,10 +13,10 @@ public object KtorClientJsonGeneration : JupyterIntegration() {
     }
 }
 
-public fun HttpResponse.deserializeJson(className: String = "Response"): DeserializeThis =
+public fun HttpResponse.deserializeJson(className: String? = null): DeserializeThis =
     NotebookHttpResponse(this).deserializeJson(className)
 
 
-public fun NotebookHttpResponse.deserializeJson(className: String = "Response"): DeserializeThis {
+public fun NotebookHttpResponse.deserializeJson(className: String? = null): DeserializeThis {
     return DeserializeThis(bodyAsText(), className)
 }
