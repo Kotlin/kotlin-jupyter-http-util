@@ -1,4 +1,4 @@
-package org.jetbrains.kotlinx.jupyter.json
+package org.jetbrains.kotlinx.jupyter.serialization
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi

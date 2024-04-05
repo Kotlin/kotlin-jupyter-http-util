@@ -1,4 +1,4 @@
-package org.jetbrains.kotlinx.jupyter.json
+package org.jetbrains.kotlinx.jupyter.serialization
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
@@ -58,7 +58,7 @@ public fun String.deserializeJson(className: String? = null): DeserializeThis {
  * ```
  */
 @JupyterLibrary
-public class JsonGenerationIntegration : JupyterIntegration() {
+public class SerializationIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
         onLoaded {
             val jsonDeserializer = Json {
@@ -70,10 +70,10 @@ public class JsonGenerationIntegration : JupyterIntegration() {
 
         import("kotlinx.serialization.*")
         import("kotlinx.serialization.json.*")
-        import("org.jetbrains.kotlinx.jupyter.json.deserializeJson")
+        import("org.jetbrains.kotlinx.jupyter.serialization.deserializeJson")
 
         // required for auto-deserialization below
-        import("org.jetbrains.kotlinx.jupyter.json.UntypedAny")
+        import("org.jetbrains.kotlinx.jupyter.serialization.UntypedAny")
 
         addRenderer(
             createRenderer(

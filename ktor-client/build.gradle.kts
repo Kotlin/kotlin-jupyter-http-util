@@ -11,11 +11,8 @@ kotlinJupyter {
 }
 
 dependencies {
-    testImplementation(libs.kotlin.test)
-    api(libs.ktor.client.core)
-    runtimeOnly(libs.ktor.client.cio)
-    api(libs.ktor.client.content.negotiation)
-    api(libs.ktor.serialization.kotlinx.json)
+    api(project(":ktor-client-core"))
+    api(project(":serialization"))
 }
 
 tasks.test {

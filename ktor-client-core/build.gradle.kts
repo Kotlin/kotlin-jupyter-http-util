@@ -11,8 +11,11 @@ kotlinJupyter {
 }
 
 dependencies {
-    api(project(":ktor-client"))
-    api(project(":json-generation"))
+    testImplementation(libs.kotlin.test)
+    api(libs.ktor.client.core)
+    runtimeOnly(libs.ktor.client.cio)
+    api(libs.ktor.client.content.negotiation)
+    api(libs.ktor.serialization.kotlinx.json)
 }
 
 tasks.test {
@@ -22,4 +25,3 @@ kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
     explicitApi()
 }
-

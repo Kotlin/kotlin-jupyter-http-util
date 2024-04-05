@@ -1,4 +1,4 @@
-package org.jetbrains.kotlinx.jupyter.ktor.client
+package org.jetbrains.kotlinx.jupyter.ktor.client.core
 
 import io.ktor.client.*
 import io.ktor.client.engine.*

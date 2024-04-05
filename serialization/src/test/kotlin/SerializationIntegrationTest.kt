@@ -1,6 +1,5 @@
-package org.jetbrains.kotlinx.jupyter.json
+package org.jetbrains.kotlinx.jupyter.serialization
 
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -9,11 +8,10 @@ import org.jetbrains.kotlinx.jupyter.api.MimeTypedResultEx
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-class JsonClassesGenerationTest : JupyterReplTestCase() {
+class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     @Test
     fun person() {
         end2end(
@@ -255,7 +253,7 @@ class JsonClassesGenerationTest : JupyterReplTestCase() {
         }
 
         check("\"\"\"$json\"\"\"")
-        check("org.jetbrains.kotlinx.jupyter.json.DeserializeThis(\"\"\"$json\"\"\", \"Class\")")
+        check("org.jetbrains.kotlinx.jupyter.serialization.DeserializeThis(\"\"\"$json\"\"\", \"Class\")")
     }
 
     private fun end2end(

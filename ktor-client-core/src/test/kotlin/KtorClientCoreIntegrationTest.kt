@@ -1,4 +1,4 @@
-package org.jetbrains.kotlinx.jupyter.ktor.client
+package org.jetbrains.kotlinx.jupyter.ktor.client.core
 
 import kotlinx.serialization.json.JsonElement
 import org.intellij.lang.annotations.Language
@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-class KtorClientIntegrationTest : JupyterReplTestCase(
+class KtorClientCoreIntegrationTest : JupyterReplTestCase(
     replProvider = ReplProvider.withDefaultClasspathResolution(),
 ) {
     @Test

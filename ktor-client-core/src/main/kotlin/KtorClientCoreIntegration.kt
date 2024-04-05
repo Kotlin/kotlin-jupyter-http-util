@@ -1,4 +1,4 @@
-package org.jetbrains.kotlinx.jupyter.ktor.client
+package org.jetbrains.kotlinx.jupyter.ktor.client.core
 
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
@@ -29,7 +29,7 @@ import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
  * ```
  */
 @JupyterLibrary
-public class KtorClientIntegration : JupyterIntegration() {
+public class KtorClientCoreIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
         val ktorVersion = "2.3.7"
 
@@ -57,7 +57,7 @@ public class KtorClientIntegration : JupyterIntegration() {
 
         dependencies("io.ktor:ktor-serialization-kotlinx-xml-jvm:$ktorVersion")
 
-        import("org.jetbrains.kotlinx.jupyter.ktor.client.*")
+        import("org.jetbrains.kotlinx.jupyter.ktor.client.core.*")
 
         onLoaded {
             val httpClient = NotebookHttpClient {
