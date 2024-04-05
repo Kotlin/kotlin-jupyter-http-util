@@ -5,7 +5,9 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
 import org.jetbrains.kotlinx.jupyter.api.*
 import org.jetbrains.kotlinx.jupyter.api.annotations.JupyterLibrary
+import org.jetbrains.kotlinx.jupyter.api.libraries.FieldHandlerFactory
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
+import org.jetbrains.kotlinx.jupyter.api.libraries.TypeDetection
 import wu.seal.jsontokotlin.library.JsonToKotlinBuilder
 import wu.seal.jsontokotlin.model.TargetJsonConverter
 import kotlin.reflect.typeOf
@@ -69,7 +71,7 @@ public class JsonGenerationIntegration : JupyterIntegration() {
             )
         )
 
-        updateVariableByRuntimeType<DeserializeThis> { value, _ ->
+        val fieldHandler = FieldHandlerFactory.createUpdateHandler<DeserializeThis>(TypeDetection.RUNTIME) { value, _ ->
             try {
                 execute(
                     getGeneratedCode(value) + "\n" +
@@ -80,6 +82,7 @@ public class JsonGenerationIntegration : JupyterIntegration() {
                 null
             }
         }
+        notebook.fieldsHandlersProcessor.register(fieldHandler, ProcessingPriority.HIGHEST)
     }
 }
 
