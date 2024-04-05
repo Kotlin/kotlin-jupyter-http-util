@@ -7,16 +7,16 @@ import org.jetbrains.kotlinx.jupyter.ktor.client.NotebookHttpResponse
 import io.ktor.client.statement.*
 
 @JupyterLibrary
-object KtorClientJsonGeneration : JupyterIntegration() {
+public object KtorClientJsonGeneration : JupyterIntegration() {
     override fun Builder.onLoaded() {
         import("org.jetbrains.kotlinx.jupyter.ktor.client.json.*")
     }
 }
 
-fun HttpResponse.deserializeJson(className: String = "Response"): DeserializeThis =
+public fun HttpResponse.deserializeJson(className: String = "Response"): DeserializeThis =
     NotebookHttpResponse(this).deserializeJson(className)
 
 
-fun NotebookHttpResponse.deserializeJson(className: String = "Response"): DeserializeThis {
+public fun NotebookHttpResponse.deserializeJson(className: String = "Response"): DeserializeThis {
     return DeserializeThis(bodyAsText(), className)
 }
