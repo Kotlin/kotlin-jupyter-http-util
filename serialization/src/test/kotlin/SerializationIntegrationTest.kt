@@ -256,6 +256,21 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
         check("org.jetbrains.kotlinx.jupyter.serialization.DeserializeThis(\"\"\"$json\"\"\", \"Class\")")
     }
 
+    @Test
+    fun `dollar escaping`() {
+        end2end(
+            json = """{"a": "${'$'}string"}""",
+            expectedGenerated = """
+                @Serializable
+                data class Response(
+                    @SerialName("a")
+                    val a: String
+                )
+            """.trimIndent(),
+            expectedDeserialized = "Response(a=\$string)",
+        )
+    }
+
     private fun end2end(
         @Language("JSON") json: String,
         @Language("kotlin") expectedGenerated: String,
@@ -292,9 +307,10 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
         val stringLiteral = if (json.isBlank()) {
             "\"$json\""
         } else {
+            val escaped = json.replace("$", "\${'$'}")
             """
                 ${"\""}""
-                    $json
+                    $escaped
                 ${"\""}"".trimIndent()
             """.trimIndent()
         }

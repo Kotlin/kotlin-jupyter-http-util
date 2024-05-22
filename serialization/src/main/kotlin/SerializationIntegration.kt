@@ -91,9 +91,11 @@ public class SerializationIntegration : JupyterIntegration() {
         val fieldHandler = FieldHandlerFactory.createUpdateHandler<DeserializeThis>(TypeDetection.RUNTIME) { value, prop ->
             try {
                 val className = value.className ?: prop.name.replaceFirstChar(Char::titlecaseChar)
+                val escapedJson = value.jsonString
+                    .replace("$", "\${'$'}")
                 execute(
                     getGeneratedCode(value.jsonString, className) + "\n" +
-                        "jsonDeserializer.decodeFromString<$className>(\"\"\"${value.jsonString}\"\"\")"
+                        "jsonDeserializer.decodeFromString<$className>(\"\"\"$escapedJson\"\"\")"
                 ).name
             } catch (e: Exception) {
                 display("Error during deserialization: ${e.cause?.message}", id = null)
