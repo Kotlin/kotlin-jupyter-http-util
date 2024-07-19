@@ -1,3 +1,5 @@
+@file:Suppress("RedundantVisibilityModifier")
+
 package org.jetbrains.kotlinx.jupyter.serialization
 
 import kotlinx.serialization.json.JsonObject
@@ -6,7 +8,6 @@ import kotlinx.serialization.json.buildJsonObject
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlinx.jupyter.api.MimeTypedResultEx
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -37,43 +38,29 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             """.trimIndent(),
             expectedGenerated = """
                 @Serializable
-                data class Person(
-                    @SerialName("firstName")
-                    val firstName: String,
-                    @SerialName("lastName")
-                    val lastName: String,
-                    @SerialName("isAlive")
-                    val isAlive: Boolean,
-                    @SerialName("age")
-                    val age: Int,
-                    @SerialName("address")
-                    val address: Address,
-                    @SerialName("phoneNumbers")
-                    val phoneNumbers: List<PhoneNumber>,
-                    @SerialName("children")
-                    val children: List<String>,
-                    @SerialName("spouse")
-                    val spouse: UntypedAny?
+                public data class Person(
+                    public val firstName: String,
+                    public val lastName: String,
+                    public val isAlive: Boolean,
+                    public val age: Int,
+                    public val address: Address,
+                    public val phoneNumbers: List<PhoneNumber>,
+                    public val children: List<String>,
+                    public val spouse: UntypedAny?,
                 )
                 
                 @Serializable
-                data class Address(
-                    @SerialName("streetAddress")
-                    val streetAddress: String,
-                    @SerialName("city")
-                    val city: String,
-                    @SerialName("state")
-                    val state: String,
-                    @SerialName("postalCode")
-                    val postalCode: String
+                public data class Address(
+                    public val streetAddress: String,
+                    public val city: String,
+                    public val state: String,
+                    public val postalCode: String,
                 )
                 
                 @Serializable
-                data class PhoneNumber(
-                    @SerialName("type")
-                    val type: String,
-                    @SerialName("number")
-                    val number: String
+                public data class PhoneNumber(
+                    public val type: String,
+                    public val number: String,
                 )
             """.trimIndent(),
             expectedDeserialized = "Person(" +
@@ -109,27 +96,21 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = json,
             expectedGenerated = """
                 @Serializable
-                data class Response(
-                    @SerialName("property")
-                    val `property`: String,
-                    @SerialName("additionalValues")
-                    val additionalValues: List<AdditionalValue>
+                public data class Response(
+                    public val `property`: String,
+                    public val additionalValues: List<AdditionalValue>,
                 )
                 
                 @Serializable
-                data class AdditionalValue(
-                    @SerialName("a")
-                    val a: String,
-                    @SerialName("b")
-                    val b: List<B>
+                public data class AdditionalValue(
+                    public val a: String,
+                    public val b: List<B>,
                 )
                 
                 @Serializable
-                data class B(
-                    @SerialName("c")
-                    val c: String?,
-                    @SerialName("d")
-                    val d: String?
+                public data class B(
+                    public val c: String?,
+                    public val d: String?,
                 )
             """.trimIndent(),
             expectedDeserialized = "Response(" +
@@ -146,10 +127,10 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
         end2end(
             json = "[{}, {}]",
             expectedGenerated = """
-                typealias Response = List<ResponseItem>
+                public typealias Response = List<ResponseItem>
                 
                 @Serializable
-                data object ResponseItem
+                public data object ResponseItem
             """.trimIndent(),
             expectedDeserialized = "[ResponseItem, ResponseItem]",
         )
@@ -159,8 +140,9 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     fun `empty array`() {
         end2end(
             json = "[]",
-            expectedGenerated = "typealias Response = List<UntypedAny?>",
+            expectedGenerated = "public typealias Response = List<UntypedAny?>",
             expectedDeserialized = "[]",
+            serializableImport = false
         )
     }
 
@@ -168,8 +150,9 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     fun `array with int`() {
         end2end(
             json = "[12]",
-            expectedGenerated = "typealias Response = List<Int>",
+            expectedGenerated = "public typealias Response = List<Int>",
             expectedDeserialized = "[12]",
+            serializableImport = false
         )
     }
 
@@ -177,9 +160,9 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     fun int() {
         end2end(
             json = "12",
-            expectedGenerated = "typealias Response = Int",
+            expectedGenerated = "public typealias Response = Int",
             expectedDeserialized = "12",
-            addImports = false,
+            serializableImport = false,
         )
     }
 
@@ -189,8 +172,9 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = """
                 [12, ""]
             """.trimIndent(),
-            expectedGenerated = "typealias Response = List<UntypedAny?>",
+            expectedGenerated = "public typealias Response = List<UntypedAnyNotNull>",
             expectedDeserialized = "[12, ]",
+            serializableImport = false
         )
     }
 
@@ -198,8 +182,9 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     fun `array with null`() {
         end2end(
             json = "[null]",
-            expectedGenerated = "typealias Response = List<UntypedAny?>",
+            expectedGenerated = "public typealias Response = List<UntypedAny?>",
             expectedDeserialized = "[null]",
+            serializableImport = false
         )
     }
 
@@ -213,27 +198,28 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     }
 
     @Test
-    @Disabled("Doesn't work yet")
     fun `nullable int array`() {
         end2end(
             json = "[12, null]",
-            expectedGenerated = "typealias Response = List<Int?>",
+            expectedGenerated = "public typealias Response = List<Int?>",
             expectedDeserialized = "[12, null]",
+            serializableImport = false
         )
     }
 
     @Test
-    @Disabled("Doesn't work yet")
     fun `array with objects with property of different types`() {
         end2end(
             json = """
                 [{"a": "string"}, {"a": 12}]
             """.trimIndent(),
             expectedGenerated = """
-                typealias Response = List<ResponseItem>
+                public typealias Response = List<ResponseItem>
                 
                 @Serializable
-                data class ResponseItem(val a: UntypedAny)
+                public data class ResponseItem(
+                    public val a: UntypedAnyNotNull,
+                )
             """.trimIndent(),
             expectedDeserialized = "[ResponseItem(a=string), ResponseItem(a=12)]",
         )
@@ -262,12 +248,188 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = """{"a": "${'$'}string"}""",
             expectedGenerated = """
                 @Serializable
-                data class Response(
-                    @SerialName("a")
-                    val a: String
+                public data class Response(
+                    public val a: String,
                 )
             """.trimIndent(),
             expectedDeserialized = "Response(a=\$string)",
+        )
+    }
+
+    @Test
+    fun `same complex structure in different fields`() {
+        val json = """
+            {
+              "a": {
+                "c": {
+                  "d": 1
+                },
+                "e": {
+                  "f": 1
+                }
+              },
+              "b": {
+                "c": {
+                  "d": 1
+                },
+                "e": {
+                  "f": 1
+                }
+              }
+            }
+        """.trimIndent()
+        getGeneratedCode(json, "Class")
+        end2end(
+            json = json,
+            expectedGenerated = """
+                @Serializable
+                public data class Response(
+                    public val a: A,
+                    public val b: B,
+                )
+                
+                @Serializable
+                public data class A(
+                    public val c: C,
+                    public val e: E,
+                )
+                
+                @Serializable
+                public data class C(
+                    public val d: Int,
+                )
+                
+                @Serializable
+                public data class E(
+                    public val f: Int,
+                )
+                
+                @Serializable
+                public data class B(
+                    public val c: C,
+                    public val e: E,
+                )
+            """.trimIndent(),
+            expectedDeserialized = "Response(a=A(c=C(d=1), e=E(f=1)), b=B(c=C(d=1), e=E(f=1)))",
+        )
+    }
+
+    @Test
+    fun `property with 'list' name`() {
+        val json = """{"list": [{}]}"""
+        end2end(
+            json = json,
+            expectedGenerated = """
+                @Serializable
+                public data class Response(
+                    public val list: kotlin.collections.List<List>,
+                )
+                
+                @Serializable
+                public data object List
+            """.trimIndent(),
+            expectedDeserialized = "Response(list=[List])",
+        )
+    }
+
+    @Test
+    fun `class deduplication`() {
+        val json = """{"a": {"c": {}}, "b": {"c": {}}}"""
+        end2end(
+            json = json,
+            expectedGenerated = """
+                @Serializable
+                public data class Response(
+                    public val a: A,
+                    public val b: B,
+                )
+                
+                @Serializable
+                public data class A(
+                    public val c: C,
+                )
+                
+                @Serializable
+                public data object C
+                
+                @Serializable
+                public data class B(
+                    public val c: C,
+                )
+            """.trimIndent(),
+            expectedDeserialized = "Response(a=A(c=C), b=B(c=C))",
+        )
+    }
+
+    @Test
+    fun `list item naming`() {
+        val json = """
+            {
+              "addressList": [{}],
+              "names": [{}],
+              "names ": [{"value": 1}],
+              "addresses": [{}],
+              "butterflies": [{}],
+              "radishes": [{}],
+              "beaches": [{}],
+              "taxes": [{}],
+              "tags": [{}]
+            }
+        """.trimIndent()
+        end2end(
+            json = json,
+            expectedGenerated = """
+                @Serializable
+                public data class Response(
+                    public val addressList: List<Address>,
+                    public val names: List<Name>,
+                    @SerialName("names ")
+                    public val names1: List<Name1>,
+                    public val addresses: List<Address>,
+                    public val butterflies: List<Butterfly>,
+                    public val radishes: List<Radish>,
+                    public val beaches: List<Beach>,
+                    public val taxes: List<Tax>,
+                    public val tags: List<Tag>,
+                )
+                
+                @Serializable
+                public data object Address
+                
+                @Serializable
+                public data object Name
+                
+                @Serializable
+                public data class Name1(
+                    public val `value`: Int,
+                )
+                
+                @Serializable
+                public data object Butterfly
+                
+                @Serializable
+                public data object Radish
+                
+                @Serializable
+                public data object Beach
+                
+                @Serializable
+                public data object Tax
+                
+                @Serializable
+                public data object Tag
+            """.trimIndent(),
+            expectedDeserialized = "Response(" +
+                "addressList=[Address], " +
+                "names=[Name], " +
+                "names1=[Name1(value=1)], " +
+                "addresses=[Address], " +
+                "butterflies=[Butterfly], " +
+                "radishes=[Radish], " +
+                "beaches=[Beach], " +
+                "taxes=[Tax], " +
+                "tags=[Tag])",
+            serialNameImport = true,
         )
     }
 
@@ -277,14 +439,17 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
         expectedDeserialized: String,
         valName: String = "response",
         generatedClassName: String? = null,
-        addImports: Boolean = true,
+        serializableImport: Boolean = true,
+        serialNameImport: Boolean = false,
     ) {
         val value = getGeneratedCode(json, generatedClassName ?: valName.replaceFirstChar(kotlin.Char::titlecaseChar))
-        if (addImports) {
-            assertGeneratedCode(expectedGenerated, value)
-        } else {
-            assertEquals(expectedGenerated, value)
-        }
+        val expectedGeneratedWithImports = (if (serialNameImport) {
+            "import kotlinx.serialization.SerialName\n"
+        } else "") + (if (serializableImport) {
+            "import kotlinx.serialization.Serializable\n"
+        } else "") + (if (serializableImport || serialNameImport) "\n" else "") +
+            expectedGenerated.trimEnd()
+        assertEquals(expectedGeneratedWithImports, value)
 
         val value2 = execDeserialization(json = json, valName = valName, generatedClassName = generatedClassName)
 
@@ -319,17 +484,5 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 if (generatedClassName != null) "\"$generatedClassName\")" else "null)"
         )
         return execRaw(valName)
-    }
-
-    private fun assertGeneratedCode(expected: String, actual: String) {
-        assertEquals(
-            """
-                
-                import kotlinx.serialization.SerialName
-                import kotlinx.serialization.Serializable
-    
-    
-            """.trimIndent() + expected, actual
-        )
     }
 }

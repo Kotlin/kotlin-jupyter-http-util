@@ -17,6 +17,9 @@ import kotlinx.serialization.serializer
 @Suppress("unused")
 public typealias UntypedAny = @Serializable(with = UntypedSerialization::class) Any
 
+@Suppress("unused")
+public typealias UntypedAnyNotNull = @Serializable(with = UntypedSerializationNotNull::class) Any
+
 /**
  * This serializer supports deserializing JSON primitives to corresponding Kotlin primitives,
  * lists to Kotlin [List]`<Any?>` recursively, and objects to Kotlin [Map]`<String, Any?>` recursively.
@@ -28,10 +31,7 @@ public typealias UntypedAny = @Serializable(with = UntypedSerialization::class) 
 public object UntypedSerialization : KSerializer<Any?> {
     @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
     override val descriptor: SerialDescriptor
-        get() = buildSerialDescriptor(
-            "UntypedSerialization",
-            SerialKind.CONTEXTUAL,
-        )
+        get() = buildSerialDescriptor("UntypedSerialization", SerialKind.CONTEXTUAL)
 
     override fun deserialize(decoder: Decoder): Any? {
         if (decoder !is JsonDecoder) error("This deserializer only supports JSON")
@@ -61,8 +61,10 @@ public object UntypedSerialization : KSerializer<Any?> {
         return deserialize(decoder.decodeJsonElement())
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     override fun serialize(encoder: Encoder, value: Any?) {
         when (value) {
+            null -> encoder.encodeNull()
             is String -> encoder.encodeString(value)
             is Double -> encoder.encodeDouble(value)
             is Float -> encoder.encodeFloat(value)
@@ -82,5 +84,20 @@ public object UntypedSerialization : KSerializer<Any?> {
                 throw IllegalArgumentException("Unexpected type during serialization: $value")
             }
         }
+    }
+}
+
+/** Like [UntypedSerialization], but for non-nullable Any */
+public object UntypedSerializationNotNull : KSerializer<Any> {
+    @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+    override val descriptor: SerialDescriptor
+        get() = buildSerialDescriptor("UntypedSerialization", SerialKind.CONTEXTUAL)
+
+    override fun deserialize(decoder: Decoder): Any {
+        return UntypedSerialization.deserialize(decoder) ?: throw IllegalArgumentException("Unexpected null")
+    }
+
+    override fun serialize(encoder: Encoder, value: Any) {
+        UntypedSerialization.serialize(encoder, value)
     }
 }

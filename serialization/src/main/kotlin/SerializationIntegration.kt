@@ -8,8 +8,7 @@ import org.jetbrains.kotlinx.jupyter.api.annotations.JupyterLibrary
 import org.jetbrains.kotlinx.jupyter.api.libraries.FieldHandlerFactory
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
 import org.jetbrains.kotlinx.jupyter.api.libraries.TypeDetection
-import wu.seal.jsontokotlin.library.JsonToKotlinBuilder
-import wu.seal.jsontokotlin.model.TargetJsonConverter
+import org.jetbrains.kotlinx.jupyter.json2kt.jsonDataToKotlinCode
 import kotlin.reflect.typeOf
 
 /**
@@ -33,7 +32,7 @@ public class DeserializeThis(public val jsonString: String, public val className
 
 /**
  * Variables with values returned by this function get replaced by deserialized value **in the next cell**.
- * [className] is a simple name of the class to be generated that [jsonString] will be deserialized into.
+ * [className] is a simple name of the class to be generated that [this] will be deserialized into.
  *
  * Usage:
  * ```kotlin
@@ -74,6 +73,7 @@ public class SerializationIntegration : JupyterIntegration() {
 
         // required for auto-deserialization below
         import("org.jetbrains.kotlinx.jupyter.serialization.UntypedAny")
+        import("org.jetbrains.kotlinx.jupyter.serialization.UntypedAnyNotNull")
 
         addRenderer(
             createRenderer(
@@ -107,35 +107,7 @@ public class SerializationIntegration : JupyterIntegration() {
 }
 
 internal fun getGeneratedCode(jsonString: String, className: String): String {
-    val jsonElement = Json.Default.parseToJsonElement(jsonString)
-    if (jsonElement is JsonPrimitive) {
-        return "typealias $className = " + when {
-            jsonElement.isString -> String::class.simpleName
-            jsonElement.booleanOrNull != null -> Boolean::class.simpleName
-            jsonElement.intOrNull != null -> Int::class.simpleName
-            jsonElement.longOrNull != null -> Long::class.simpleName
-            jsonElement.doubleOrNull != null -> Double::class.simpleName
-            else -> Nothing::class.simpleName + "?"
-        }
-    }
-    return JsonToKotlinBuilder()
-        .setAnnotationLib(TargetJsonConverter.Serializable)
-        .build(jsonString, className)
-        .replace("Any?", "UntypedAny?")
-        .replace("<Any>", "<UntypedAny?>")
-        .let {
-            "class (\\w+)$".toRegex().replace(it) { matchResult ->
-                "data object " + matchResult.groupValues[1]
-            }
-        }
-        .convertArrayClassToTypeAlias()
-}
-
-private fun String.convertArrayClassToTypeAlias(): String {
-    val pattern = "class (\\w+) : ArrayList<([\\w @?]+)>\\(\\)".toRegex()
-    return pattern.replace(this) { matchResult ->
-        "typealias ${matchResult.groupValues[1]} = List<${matchResult.groupValues[2]}>"
-    }
+    return jsonDataToKotlinCode(Json.Default.parseToJsonElement(jsonString), rootTypeName = className)
 }
 
 private fun shouldHighlightAsJson(jsonOrNot: String): Boolean {
