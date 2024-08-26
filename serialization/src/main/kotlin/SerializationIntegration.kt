@@ -98,7 +98,7 @@ public class SerializationIntegration : JupyterIntegration() {
                         "jsonDeserializer.decodeFromString<$className>(\"\"\"$escapedJson\"\"\")"
                 ).name
             } catch (e: Exception) {
-                display("Error during deserialization: ${e.cause?.message}", id = null)
+                display("Error during deserialization: ${e.cause?.message ?: e.message}", id = null)
                 null
             }
         }
