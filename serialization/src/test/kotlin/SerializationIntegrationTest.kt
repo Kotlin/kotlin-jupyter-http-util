@@ -362,6 +362,54 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     }
 
     @Test
+    fun `class deduplication and disambiguation`() {
+        end2end(
+            json = """
+                {
+                  "links": {
+                    "a": "a"
+                  },
+                  "b1": {
+                    "links": {
+                    }
+                  },
+                  "b2": {
+                    "links": {
+                    }
+                  }
+                }
+            """.trimIndent(),
+            expectedGenerated = """
+                @Serializable
+                public data class Response(
+                    public val links: Links,
+                    public val b1: B1,
+                    public val b2: B2,
+                )
+                
+                @Serializable
+                public data class Links(
+                    public val a: String,
+                )
+                
+                @Serializable
+                public data class B1(
+                    public val links: Links1,
+                )
+                
+                @Serializable
+                public data object Links1
+                
+                @Serializable
+                public data class B2(
+                    public val links: Links1,
+                )
+            """.trimIndent(),
+            expectedDeserialized = "Response(links=Links(a=a), b1=B1(links=Links1), b2=B2(links=Links1))",
+        )
+    }
+
+    @Test
     fun `list item naming`() {
         val json = """
             {

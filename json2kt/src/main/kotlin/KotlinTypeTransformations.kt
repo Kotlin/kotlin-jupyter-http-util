@@ -2,30 +2,39 @@ package org.jetbrains.kotlinx.jupyter.json2kt
 
 import java.util.*
 
-internal fun KotlinType.collectAllClasses(): Set<KotlinClass> {
+internal fun KotlinType.collectAllClasses(): Iterable<KotlinClass> {
+    class IdentityHashSet<E> : MutableSet<E> by Collections.newSetFromMap(IdentityHashMap())
+
     /**
      * Iterates using DFS over the tree (directed acyclic graph, to be precise) of referenced classes.
-     * Collects all encountered classes into [allClasses].
+     * Collects all encountered classes into [allClasses] and [visited].
      */
-    fun doCollectAllClasses(currentType: KotlinType, allClasses: MutableSet<in KotlinClass>) {
+    fun doCollectAllClasses(
+        currentType: KotlinType,
+        // used for fast checking if we already visited this class
+        visited: IdentityHashSet<in KotlinClass>,
+        // used for preserving visit order
+        allClasses: MutableList<in KotlinClass>
+    ) {
         when (currentType) {
             is KotlinType.KtClass -> {
-                if (!allClasses.add(currentType.clazz)) return
+                if (!visited.add(currentType.clazz)) return
+                allClasses.add(currentType.clazz)
                 // a class may reference other classes in its properties
                 for (property in currentType.clazz.properties) {
-                    doCollectAllClasses(property.type, allClasses)
+                    doCollectAllClasses(property.type, visited, allClasses)
                 }
             }
 
             // a list may reference other classes in its element type
-            is KotlinType.KtList -> doCollectAllClasses(currentType.elementType, allClasses)
+            is KotlinType.KtList -> doCollectAllClasses(currentType.elementType, visited, allClasses)
 
             // no classes referenced
             is KotlinType.Primitive, is KotlinType.KtAny -> {}
         }
     }
 
-    return mutableSetOf<KotlinClass>().also { doCollectAllClasses(this, it) }
+    return mutableListOf<KotlinClass>().also { doCollectAllClasses(this, IdentityHashSet(), it) }
 }
 
 /**
