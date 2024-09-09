@@ -8,6 +8,7 @@ import org.jetbrains.kotlinx.jupyter.api.annotations.JupyterLibrary
 import org.jetbrains.kotlinx.jupyter.api.libraries.FieldHandlerFactory
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
 import org.jetbrains.kotlinx.jupyter.api.libraries.TypeDetection
+import org.jetbrains.kotlinx.jupyter.json2kt.GeneratedCodeResult
 import org.jetbrains.kotlinx.jupyter.json2kt.jsonDataToKotlinCode
 import kotlin.reflect.typeOf
 
@@ -93,9 +94,10 @@ public class SerializationIntegration : JupyterIntegration() {
                 val className = value.className ?: prop.name.replaceFirstChar(Char::titlecaseChar)
                 val escapedJson = value.jsonString
                     .replace("$", "\${'$'}")
+                val generatedCode = getGeneratedCode(value.jsonString, className)
                 execute(
-                    getGeneratedCode(value.jsonString, className) + "\n" +
-                        "jsonDeserializer.decodeFromString<$className>(\"\"\"$escapedJson\"\"\")"
+                    generatedCode.code + "\n" +
+                        "jsonDeserializer.decodeFromString<${generatedCode.rootTypeName}>(\"\"\"$escapedJson\"\"\")"
                 ).name
             } catch (e: Exception) {
                 display("Error during deserialization: ${e.cause?.message ?: e.message}", id = null)
@@ -106,8 +108,8 @@ public class SerializationIntegration : JupyterIntegration() {
     }
 }
 
-internal fun getGeneratedCode(jsonString: String, className: String): String {
-    return jsonDataToKotlinCode(Json.Default.parseToJsonElement(jsonString), rootTypeName = className)
+internal fun getGeneratedCode(jsonString: String, className: String): GeneratedCodeResult {
+    return jsonDataToKotlinCode(Json.Default.parseToJsonElement(jsonString), requestedRootTypeName = className)
 }
 
 private fun shouldHighlightAsJson(jsonOrNot: String): Boolean {

@@ -2,7 +2,7 @@ package org.jetbrains.kotlinx.jupyter.json2kt
 
 import java.util.*
 
-internal fun KotlinType.collectAllClasses(): Iterable<KotlinClass> {
+internal fun RootType.collectAllClasses(): Iterable<KotlinClass> {
     class IdentityHashSet<E> : MutableSet<E> by Collections.newSetFromMap(IdentityHashMap())
 
     /**
@@ -34,7 +34,7 @@ internal fun KotlinType.collectAllClasses(): Iterable<KotlinClass> {
         }
     }
 
-    return mutableListOf<KotlinClass>().also { doCollectAllClasses(this, IdentityHashSet(), it) }
+    return mutableListOf<KotlinClass>().also { doCollectAllClasses(this.type, IdentityHashSet(), it) }
 }
 
 /**
@@ -69,7 +69,7 @@ private fun renameAndReplace(
  * Gets rid of duplicate classes. Classes are duplicates when they have the same name and structure.
  * In other words, when [KotlinClass.equals] (deep structural equality) returns `true`.
  */
-internal fun deduplicate(rootType: KotlinType, allClasses: Iterable<KotlinClass>): KotlinType {
+internal fun deduplicate(rootType: RootType, allClasses: Iterable<KotlinClass>): RootType {
     val classesByName = allClasses.groupBy { it.name }
 
     val replace = IdentityHashMap<KotlinClass, KotlinClass>()
@@ -92,55 +92,89 @@ internal fun deduplicate(rootType: KotlinType, allClasses: Iterable<KotlinClass>
         }
     }
 
-    return renameAndReplace(rootType, replace = replace, resultCache = IdentityHashMap())
+    return RootType(
+        name = rootType.name,
+        type = renameAndReplace(rootType.type, replace = replace, resultCache = IdentityHashMap())
+    )
 }
 
 /**
- * Renames classes that have the same name as some other classes.
- * Additionally, if [rootType] is a class, we do not rename it, and rename all other same-named instead.
- * If [rootType] is not a class, we need to rename all classes named [rootTypeName],
+ * This class describes the root type. If root type is a class, it should have [name] as its type.
+ *  If root type is not a class, a type alias named [name] is generated.
+ */
+internal class RootType(val name: KotlinClassName, val type: KotlinType)
+
+/**
+ * Renames classes that have the same name as some other classes, or names that are reserved.
+ * Additionally, if [rootType] is a class, we do not rename it (unless its name is reserved),
+ * and rename all other same-named instead.
+ * If [rootType] is not a class, we need to rename all classes named [rootType]`.name`,
  * so that we can generate a typealias with that name.
  */
-internal fun disambiguate(rootTypeName: String, rootType: KotlinType, allClasses: Iterable<KotlinClass>): KotlinType {
+internal fun disambiguate(rootType: RootType, allClasses: Iterable<KotlinClass>): RootType {
+    var rootTypeName = rootType.name
+
     val takenNames = mutableSetOf<KotlinClassName>()
     allClasses.mapTo(takenNames) { it.name }
+    val reservedNames = ReservedNames.simpleClassNames.map { KotlinClassName(it) }
+    takenNames.addAll(reservedNames)
 
     val classesByName = allClasses.groupBy { it.name }
     val rename = IdentityHashMap<KotlinClass, KotlinClassName>()
 
-    // if top-level type is one of the generated classes, we will need to make sure it isn't renamed,
-    // but all others with its name are
-    val rootTypeClassName = KotlinClassName(rootTypeName)
-    takenNames.add(rootTypeClassName)
-    classesByName[rootTypeClassName]?.let { classes ->
-        for (clazz in classes) {
-            if (rootType is KotlinType.KtClass) {
-                /** rename all classes except [rootType] */
-                if (clazz === rootType.clazz) continue
-                rename[clazz] = uniqueName(clazz.name, takenNames)
-            } else {
-                /** rename all classes to free up [rootTypeName] for [rootType] typealias */
-                rename[clazz] = uniqueName(clazz.name, takenNames)
+    if (rootTypeName in reservedNames) {
+        // as much as we'd like not to rename root type, if it has a reserved name, we have to
+        rootTypeName = uniqueName(rootTypeName, takenNames)
+        if (rootType.type is KotlinType.KtClass) {
+            rename[rootType.type.clazz] = rootTypeName
+        }
+    } else {
+        // if top-level type is one of the generated classes, we will need to make sure it isn't renamed,
+        // but all others with its name are
+        takenNames.add(rootTypeName)
+        classesByName[rootTypeName]?.let { classes ->
+            for (clazz in classes) {
+                if (rootType.type is KotlinType.KtClass) {
+                    /** rename all classes except [rootType] */
+                    if (clazz === rootType.type.clazz) continue
+                    rename[clazz] = uniqueName(clazz.name, takenNames)
+                } else {
+                    /** rename all classes to free up [rootType]`.name` for [rootType]'s typealias */
+                    rename[clazz] = uniqueName(clazz.name, takenNames)
+                }
             }
         }
     }
 
     for ((name, classes) in classesByName) {
-        // already renamed above
-        if (name == rootTypeClassName) continue
+        // already scheduled to be renamed above
+        if (name == rootTypeName || name == rootType.name && name !in reservedNames) continue
+
+        fun ensureUniqueNames() {
+            for (clazz in classes) {
+                // already scheduled to be renamed
+                if (clazz in rename) continue
+                val newName = uniqueName(clazz.name, takenNames)
+                if (newName != name) {
+                    rename[clazz] = newName
+                }
+            }
+        }
+
+        if (name in reservedNames) {
+            // renaming all classes
+            ensureUniqueNames()
+            continue
+        }
+
         if (classes.size == 1) continue
 
         // one of the classes is allowed to be named `name`
         takenNames.remove(name)
-        for (clazz in classes) {
-            val newName = uniqueName(clazz.name, takenNames)
-            if (newName != name) {
-                rename[clazz] = newName
-            }
-        }
+        ensureUniqueNames()
     }
 
-    return renameAndReplace(rootType, rename = rename, resultCache = IdentityHashMap())
+    return RootType(rootTypeName, renameAndReplace(rootType.type, rename = rename, resultCache = IdentityHashMap()))
 }
 
 /**
