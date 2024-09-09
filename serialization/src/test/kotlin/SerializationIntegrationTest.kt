@@ -7,11 +7,13 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlinx.jupyter.api.MimeTypedResultEx
+import org.jetbrains.kotlinx.jupyter.json2kt.ReservedNames
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import kotlin.test.assertContains
 
 class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     @Test
@@ -74,6 +76,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 "PhoneNumber(type=office, number=646 555-4567)], " +
                 "children=[Catherine, Thomas, Trevor], " +
                 "spouse=null)",
+            imports = listOf(BOOLEAN, INT, STRING, LIST, SERIALIZABLE, UNTYPED_ANY),
             valName = "person",
         )
     }
@@ -119,7 +122,8 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 "additionalValues=[" +
                 "AdditionalValue(a=a, b=[B(c=c, d=d), B(c=c, d=null)]), " +
                 "AdditionalValue(a=a, b=[B(c=null, d=d), B(c=c, d=d)])" +
-                "])"
+                "])",
+            imports = listOf(STRING, LIST, SERIALIZABLE),
         )
     }
 
@@ -134,6 +138,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 public data object ResponseItem
             """.trimIndent(),
             expectedDeserialized = "[ResponseItem, ResponseItem]",
+            imports = listOf(LIST, SERIALIZABLE),
         )
     }
 
@@ -143,7 +148,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = "[]",
             expectedGenerated = "public typealias Response = List<UntypedAny?>",
             expectedDeserialized = "[]",
-            serializableImport = false
+            imports = listOf(LIST, UNTYPED_ANY),
         )
     }
 
@@ -153,7 +158,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = "[12]",
             expectedGenerated = "public typealias Response = List<Int>",
             expectedDeserialized = "[12]",
-            serializableImport = false
+            imports = listOf(INT, LIST),
         )
     }
 
@@ -163,7 +168,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = "[12, 12.9]",
             expectedGenerated = "public typealias Response = List<Double>",
             expectedDeserialized = "[12.0, 12.9]",
-            serializableImport = false,
+            imports = listOf(DOUBLE, LIST),
         )
     }
 
@@ -173,7 +178,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = "12",
             expectedGenerated = "public typealias Response = Int",
             expectedDeserialized = "12",
-            serializableImport = false,
+            imports = listOf(INT),
         )
     }
 
@@ -185,7 +190,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             """.trimIndent(),
             expectedGenerated = "public typealias Response = List<UntypedAnyNotNull>",
             expectedDeserialized = "[12, ]",
-            serializableImport = false
+            imports = listOf(LIST, UNTYPED_ANY_NOT_NULL),
         )
     }
 
@@ -195,7 +200,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = "[null]",
             expectedGenerated = "public typealias Response = List<UntypedAny?>",
             expectedDeserialized = "[null]",
-            serializableImport = false
+            imports = listOf(LIST, UNTYPED_ANY),
         )
     }
 
@@ -214,7 +219,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = "[12, null]",
             expectedGenerated = "public typealias Response = List<Int?>",
             expectedDeserialized = "[12, null]",
-            serializableImport = false
+            imports = listOf(INT, LIST),
         )
     }
 
@@ -233,6 +238,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 )
             """.trimIndent(),
             expectedDeserialized = "[ResponseItem(a=string), ResponseItem(a=12)]",
+            imports = listOf(LIST, SERIALIZABLE, UNTYPED_ANY_NOT_NULL),
         )
     }
 
@@ -241,6 +247,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
         val json = buildJsonObject {
             put("a", JsonPrimitive("b"))
         }
+
         fun check(input: String) {
             val res = execRendered(input)
             val applicationJson = assertIs<MimeTypedResultEx>(res)
@@ -264,6 +271,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 )
             """.trimIndent(),
             expectedDeserialized = "Response(a=\$string)",
+            imports = listOf(STRING, SERIALIZABLE),
         )
     }
 
@@ -289,7 +297,6 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
               }
             }
         """.trimIndent()
-        getGeneratedCode(json, "Class")
         end2end(
             json = json,
             expectedGenerated = """
@@ -322,6 +329,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 )
             """.trimIndent(),
             expectedDeserialized = "Response(a=A(c=C(d=1), e=E(f=1)), b=B(c=C(d=1), e=E(f=1)))",
+            imports = listOf(INT, SERIALIZABLE),
         )
     }
 
@@ -333,13 +341,14 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             expectedGenerated = """
                 @Serializable
                 public data class Response(
-                    public val list: kotlin.collections.List<List>,
+                    public val list: List<List1>,
                 )
                 
                 @Serializable
-                public data object List
+                public data object List1
             """.trimIndent(),
-            expectedDeserialized = "Response(list=[List])",
+            expectedDeserialized = "Response(list=[List1])",
+            imports = listOf(LIST, SERIALIZABLE),
         )
     }
 
@@ -417,6 +426,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 )
             """.trimIndent(),
             expectedDeserialized = "Response(links=Links(a=a), b1=B1(links=Links1), b2=B2(links=Links1))",
+            imports = listOf(STRING, SERIALIZABLE),
         )
     }
 
@@ -488,8 +498,26 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 "beaches=[Beach], " +
                 "taxes=[Tax], " +
                 "tags=[Tag])",
-            serialNameImport = true,
+            imports = listOf(INT, LIST, SERIAL_NAME, SERIALIZABLE),
         )
+    }
+
+    @Test
+    fun `reserved name`() {
+        val value = execDeserialization(
+            json = """{"list": {}}""",
+            valName = "int",
+            generatedClassName = null
+        )
+        assertEquals(expected = "Int1(list=List1)", actual = value.toString())
+
+        // checking that the class generated for "list" field in the previous cell doesn't conflict with Kotlin's List
+        val value2 = execDeserialization(
+            json = """{"field": [{}]}""",
+            valName = "int",
+            generatedClassName = null
+        )
+        assertEquals(expected = "Int1(field=[Field])", actual = value2.toString())
     }
 
     @Test
@@ -516,6 +544,10 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             """.trimIndent()
 
         val expectedOutput = """
+                import kotlin.Boolean
+                import kotlin.Int
+                import kotlin.String
+                import kotlin.collections.List
                 import kotlinx.serialization.Serializable
             
                 @Serializable
@@ -555,6 +587,7 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
         """.trimIndent()
 
         val expectedOutput = """
+            import kotlin.collections.List
             import kotlinx.serialization.Serializable
 
             public typealias Response = List<ResponseItem>
@@ -579,19 +612,17 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
         @Language("JSON") json: String,
         @Language("kotlin") expectedGenerated: String,
         expectedDeserialized: String,
+        imports: List<Import> = listOf(SERIALIZABLE),
         valName: String = "response",
         generatedClassName: String? = null,
-        serializableImport: Boolean = true,
-        serialNameImport: Boolean = false,
     ) {
-        val value = getGeneratedCode(json, generatedClassName ?: valName.replaceFirstChar(kotlin.Char::titlecaseChar))
-        val expectedGeneratedWithImports = (if (serialNameImport) {
-            "import kotlinx.serialization.SerialName\n"
-        } else "") + (if (serializableImport) {
-            "import kotlinx.serialization.Serializable\n"
-        } else "") + (if (serializableImport || serialNameImport) "\n" else "") +
+        val value = getGeneratedCode(json, generatedClassName ?: valName.replaceFirstChar(Char::titlecaseChar))
+        val imports = imports.sortedBy { it.qualifiedName }
+        val expectedGeneratedWithImports = imports.joinToString("\n") {
+            "import " + it.qualifiedName
+        } + (if (imports.isNotEmpty()) "\n\n" else "") +
             expectedGenerated.trimEnd()
-        assertEquals(expectedGeneratedWithImports, value)
+        assertEquals(expectedGeneratedWithImports, value.code)
 
         val value2 = execDeserialization(json = json, valName = valName, generatedClassName = generatedClassName)
 
@@ -626,5 +657,23 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 if (generatedClassName != null) "\"$generatedClassName\")" else "null)"
         )
         return execRaw(valName)
+    }
+
+    private class Import(val qualifiedName: String) {
+        init {
+            assertContains(ReservedNames.simpleClassNames, qualifiedName.substringAfterLast('.'))
+        }
+    }
+
+    private companion object {
+        val BOOLEAN = Import("kotlin.Boolean")
+        val INT = Import("kotlin.Int")
+        val DOUBLE = Import("kotlin.Double")
+        val STRING = Import("kotlin.String")
+        val LIST = Import("kotlin.collections.List")
+        val SERIAL_NAME = Import("kotlinx.serialization.SerialName")
+        val SERIALIZABLE = Import("kotlinx.serialization.Serializable")
+        val UNTYPED_ANY = Import("org.jetbrains.kotlinx.jupyter.serialization.UntypedAny")
+        val UNTYPED_ANY_NOT_NULL = Import("org.jetbrains.kotlinx.jupyter.serialization.UntypedAnyNotNull")
     }
 }
