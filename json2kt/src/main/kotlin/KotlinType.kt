@@ -168,7 +168,7 @@ private fun inferKotlinType(jsonSamples: List<JsonPrimitive>): KotlinType {
             sample.booleanOrNull != null -> hasBoolean = true
             sample.content.toIntOrNull() != null -> numberType = maxOf(numberType ?: NumberType.INT, NumberType.INT)
             sample.content.toLongOrNull() != null -> numberType = maxOf(numberType ?: NumberType.LONG, NumberType.LONG)
-            else -> numberType = maxOf(numberType ?: NumberType.LONG, NumberType.LONG)
+            else -> numberType = NumberType.DOUBLE
         }
     }
 

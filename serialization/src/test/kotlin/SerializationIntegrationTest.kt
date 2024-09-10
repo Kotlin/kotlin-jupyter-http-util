@@ -157,6 +157,16 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     }
 
     @Test
+    fun `array with numbers`() {
+        end2end(
+            json = "[12, 12.9]",
+            expectedGenerated = "public typealias Response = List<Double>",
+            expectedDeserialized = "[12.0, 12.9]",
+            serializableImport = false,
+        )
+    }
+
+    @Test
     fun int() {
         end2end(
             json = "12",
