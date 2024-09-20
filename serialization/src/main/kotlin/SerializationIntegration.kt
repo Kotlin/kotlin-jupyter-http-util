@@ -28,6 +28,17 @@ public class DeserializeThis(public val jsonString: String, public val className
     }
 
     override fun hashCode(): Int = 31 * jsonString.hashCode() + className.hashCode()
+
+    /**
+     * Returns the generated code for this JSON String.
+     *
+     * For objects a data class with name [className] is returned.
+     * For arrays, a type alias
+     */
+    public fun getCode(): String {
+        val generatedCode = getGeneratedCode(jsonString, className ?: "DeserializedClass")
+        return cleanupCode(generatedCode)
+    }
 }
 
 /**
@@ -109,6 +120,29 @@ public class SerializationIntegration : JupyterIntegration() {
 internal fun getGeneratedCode(jsonString: String, className: String): String {
     return jsonDataToKotlinCode(Json.Default.parseToJsonElement(jsonString), rootTypeName = className)
 }
+
+/**
+ * Cleanup generated code so internal concepts do not leak to the user.
+ *
+ * Currently, this includes:
+ * - Remove all serialization code: imports and @Serializable annotations.
+ * - Swap `UntypedAnyNotNull` with `Any`
+ * - Swap `UntypedAny` with `Any?`
+ */
+internal fun cleanupCode(code: String): String {
+    // We do not expect generated code to be long, so just use kotlin
+    // standard functions for this. Even though it means iterating the string multiple times.
+    return code
+        .replace("import kotlinx.serialization.Serializable\n", "")
+        .replace("@Serializable\n", "")
+        .replace(": UntypedAnyNotNull", ": Any")
+        .replace("<UntypedAnyNotNull>", "<Any>")
+        .replace(": UntypedAny?", ": Any?")
+        .replace("<UntypedAny?>", "<Any?>")
+        .trimStart()
+}
+
+
 
 private fun shouldHighlightAsJson(jsonOrNot: String): Boolean {
     if (jsonOrNot.length > 3_000_000) return false

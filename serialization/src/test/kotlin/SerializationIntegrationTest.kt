@@ -10,6 +10,7 @@ import org.jetbrains.kotlinx.jupyter.api.MimeTypedResultEx
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 
 class JsonSerializationIntegrationTest : JupyterReplTestCase() {
@@ -489,6 +490,81 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
                 "tags=[Tag])",
             serialNameImport = true,
         )
+    }
+
+    @Test
+    fun returnGeneratedCode_objects() {
+        val json = """
+                {
+                  "firstName": "John",
+                  "lastName": "Smith",
+                  "isAlive": true,
+                  "age": 27,
+                  "address": {
+                    "streetAddress": "21 2nd Street",
+                    "city": "New York",
+                    "state": "NY",
+                    "postalCode": "10021-3100"
+                  },
+                  "phoneNumbers": [
+                    {"type": "home", "number": "212 555-1234"},
+                    {"type": "office", "number": "646 555-4567"}
+                  ],
+                  "children": ["Catherine", "Thomas", "Trevor"],
+                  "spouse": null
+                }
+            """.trimIndent()
+
+        val expectedOutput = """
+                public data class Person(
+                    public val firstName: String,
+                    public val lastName: String,
+                    public val isAlive: Boolean,
+                    public val age: Int,
+                    public val address: Address,
+                    public val phoneNumbers: List<PhoneNumber>,
+                    public val children: List<String>,
+                    public val spouse: Any?,
+                )
+                
+                public data class Address(
+                    public val streetAddress: String,
+                    public val city: String,
+                    public val state: String,
+                    public val postalCode: String,
+                )
+                
+                public data class PhoneNumber(
+                    public val type: String,
+                    public val number: String,
+                )
+            """.trimIndent()
+
+        assertEquals(expectedOutput, DeserializeThis(json, "Person").getCode())
+    }
+
+    @Test
+    fun returnGeneratedCode_arrays() {
+        val json = """
+            [{"a": "string"}, {"a": 12}]
+        """.trimIndent()
+
+        val expectedOutput = """
+            public typealias Response = List<ResponseItem>
+            
+            public data class ResponseItem(
+                public val a: Any,
+            )
+        """.trimIndent()
+        assertEquals(expectedOutput, DeserializeThis(json, "Response").getCode())
+    }
+
+    @Test
+    fun getCode_throwsOnInvalidJson() {
+        val json = "[}"
+        assertFailsWith<IllegalArgumentException> {
+            DeserializeThis(json, "Response").getCode()
+        }
     }
 
     private fun end2end(
