@@ -28,6 +28,21 @@ public class DeserializeThis(public val jsonString: String, public val className
     }
 
     override fun hashCode(): Int = 31 * jsonString.hashCode() + className.hashCode()
+
+    /**
+     * Returns the generated data class(es) needed to serialize/deserialize the JSON data using Kotlin Serialization.
+     * The root class name is set to [className].
+     *
+     * If the JSON contains ambiguous values, i.e., a property that has both Strings and Int values, the returned
+     * code will use `Any` or `Any?` as the property type.
+     *
+     * These types are not supported by Kotlin Serialization by default, but since we cannot determine the schema
+     * for these properties, a manual serializer must be created and added to these properties.
+     */
+    public fun getCode(): String {
+        val generatedCode = getGeneratedCode(jsonString, className ?: "DeserializedClass")
+        return cleanupCode(generatedCode)
+    }
 }
 
 /**
@@ -108,6 +123,24 @@ public class SerializationIntegration : JupyterIntegration() {
 
 internal fun getGeneratedCode(jsonString: String, className: String): String {
     return jsonDataToKotlinCode(Json.Default.parseToJsonElement(jsonString), rootTypeName = className)
+}
+
+/**
+ * Cleanup generated code so internal concepts do not leak to the user.
+ *
+ * Currently, this includes:
+ * - Swap `UntypedAnyNotNull` with `Any`
+ * - Swap `UntypedAny` with `Any?`
+ */
+internal fun cleanupCode(code: String): String {
+    // We do not expect generated code to be long, so just use kotlin
+    // standard functions for this. Even though it means iterating the string multiple times.
+    return code
+        .replace(": UntypedAnyNotNull", ": Any")
+        .replace("<UntypedAnyNotNull>", "<Any>")
+        .replace(": UntypedAny?", ": Any?")
+        .replace("<UntypedAny?>", "<Any?>")
+        .trimStart()
 }
 
 private fun shouldHighlightAsJson(jsonOrNot: String): Boolean {
