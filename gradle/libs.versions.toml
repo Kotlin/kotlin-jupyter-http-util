@@ -6,6 +6,7 @@ kotlinx-serialization = "1.6.2"
 jvm-toolchain = "11"
 kotlin-jupyter = "0.12.0-142"
 kotlinpoet = "1.18.1"
+dataframe = "0.13.1"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -15,7 +16,7 @@ kotlin-jupyter-api = { id = "org.jetbrains.kotlin.jupyter.api", version.ref = "k
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
-
+dataframe = { module = "org.jetbrains.kotlinx:dataframe", version.ref = "dataframe" }
 ktor-client-core = { module = "io.ktor:ktor-client-core-jvm", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio-jvm", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation-jvm", version.ref = "ktor" }
