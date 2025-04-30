@@ -1,4 +1,4 @@
-package org.jetbrains.kotlinx.jupyter.ktor.client.core
+package org.jetbrains.kotlinx.jupyter.ktor.client.test
 
 import kotlinx.serialization.json.JsonElement
 import org.intellij.lang.annotations.Language
@@ -6,12 +6,12 @@ import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.jupyter.repl.result.EvalResultEx
 import org.jetbrains.kotlinx.jupyter.testkit.JupyterReplTestCase
 import org.jetbrains.kotlinx.jupyter.testkit.ReplProvider
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
 class KtorClientCoreIntegrationTest : JupyterReplTestCase(
-    replProvider = ReplProvider.withDefaultClasspathResolution(),
+    replProvider = ReplProvider.Companion.withDefaultClasspathResolution(),
 ) {
     @Test
     fun `default client engine`() {
@@ -50,9 +50,6 @@ class KtorClientCoreIntegrationTest : JupyterReplTestCase(
         val json = """{"b":"b","a":{"b":"b","a":null}}"""
         execRaw(
             """
-                %use serialization
-                @file:DependsOn("io.ktor:ktor-client-mock-jvm:2.3.7")
-                
                 import io.ktor.client.engine.mock.*
                 import io.ktor.client.plugins.contentnegotiation.*
                 import io.ktor.http.*
@@ -101,9 +98,6 @@ class KtorClientCoreIntegrationTest : JupyterReplTestCase(
         val json = """[{"a": 1}, {"a": 2}, {"a": 3}]"""
         execRaw(
             """
-                %use serialization
-                @file:DependsOn("io.ktor:ktor-client-mock-jvm:2.3.7")
-                
                 import io.ktor.client.engine.mock.*
                 import io.ktor.client.plugins.contentnegotiation.*
                 import io.ktor.http.*
@@ -136,9 +130,6 @@ class KtorClientCoreIntegrationTest : JupyterReplTestCase(
     fun `cannot create dataframe from response that doesn't return json`() {
         execRaw(
             """
-                %use serialization
-                @file:DependsOn("io.ktor:ktor-client-mock-jvm:2.3.7")
-                
                 import io.ktor.client.engine.mock.*
                 import io.ktor.client.plugins.contentnegotiation.*
                 import io.ktor.http.*

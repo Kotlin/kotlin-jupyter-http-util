@@ -11,8 +11,6 @@ kotlinJupyter {
 }
 
 dependencies {
-    testImplementation(libs.kotlin.test)
-    testImplementation(libs.dataframe)
     api(libs.ktor.client.core)
     runtimeOnly(libs.ktor.client.cio)
     compileOnly(libs.dataframe)
