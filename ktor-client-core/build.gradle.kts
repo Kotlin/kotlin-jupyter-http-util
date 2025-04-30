@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.jupyter.api)
-    publisher
+    alias(libs.plugins.publisher)
 }
 
 kotlinJupyter {
@@ -24,4 +24,10 @@ tasks.test {
 kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
     explicitApi()
+}
+
+kotlinPublications {
+    publication {
+        description.set("Library for making HTTP requests using Ktor client")
+    }
 }

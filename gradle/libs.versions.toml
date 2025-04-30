@@ -7,11 +7,13 @@ jvm-toolchain = "11"
 kotlin-jupyter = "0.12.0-421"
 kotlinpoet = "2.1.0"
 dataframe = "0.15.0"
+libsPublisher = "1.9.23-dev-45"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-jupyter-api = { id = "org.jetbrains.kotlin.jupyter.api", version.ref = "kotlin-jupyter" }
+publisher = { id = "org.jetbrains.kotlin.libs.publisher", version.ref = "libsPublisher" }
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

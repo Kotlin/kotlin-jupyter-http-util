@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    publisher
+    alias(libs.plugins.publisher)
 }
 
 dependencies {
@@ -17,4 +17,10 @@ tasks.test {
 kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
     explicitApi()
+}
+
+kotlinPublications {
+    publication {
+        description.set("Library for generating Kotlin code from JSON schemas")
+    }
 }
