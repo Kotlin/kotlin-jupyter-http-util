@@ -3,6 +3,7 @@
 [![JetBrains official project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Kotlin beta stability](https://img.shields.io/badge/project-beta-kotlin.svg?colorA=555555&colorB=AC29EC&label=&logo=kotlin&logoColor=ffffff&logoWidth=10)](https://kotlinlang.org/docs/components-stability.html)
 ![GitHub](https://img.shields.io/github/license/Kotlin/kotlin-jupyter-http-util?color=blue&label=License)
+[![Maven Central](https://img.shields.io/maven-central/v/org.jetbrains.kotlinx/kotlin-jupyter-ktor-client?color=blue&label=Maven%20Central)](https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlin-jupyter-ktor-client)
 
 This repository contains two integrations for [Kotlin Jupyter notebooks](https://github.com/Kotlin/kotlin-jupyter).
 * Serialization helpers for working with JSON with ease,
@@ -27,7 +28,7 @@ Install this integration by running `%use serialization` in your notebook. After
           }
       }
   """
-  
+
   val box = boxJson.deserializeJson()
   ```
 
