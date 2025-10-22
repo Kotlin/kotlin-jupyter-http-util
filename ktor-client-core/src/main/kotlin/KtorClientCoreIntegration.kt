@@ -1,9 +1,8 @@
 package org.jetbrains.kotlinx.jupyter.ktor.client.core
 
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import org.jetbrains.kotlinx.jupyter.api.annotations.JupyterLibrary
 import org.jetbrains.kotlinx.jupyter.api.declare
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
 
@@ -28,34 +27,35 @@ import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
  * }
  * ```
  */
-@JupyterLibrary
 public class KtorClientCoreIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
         val ktorVersion = "2.3.7"
 
-        fun ktorClient(artifactName: String) {
-            dependencies("io.ktor:ktor-client-$artifactName-jvm:$ktorVersion")
+        fun MutableList<String>.ktorClient(artifactName: String) {
+            add("io.ktor:ktor-client-$artifactName-jvm:$ktorVersion")
         }
 
-        ktorClient("core")
+        dependencies(*buildList {
+            ktorClient("core")
 
-        // ktor-client-cio is loaded as a transitive dependency of this artifact,
-        // so that it has priority in engine autoselection (it's currently the most popular engine).
-        ktorClient("apache")
-        ktorClient("apache5")
-        ktorClient("java")
+            // ktor-client-cio is loaded as a transitive dependency of this artifact,
+            // so that it has priority in engine autoselection (it's currently the most popular engine).
+            ktorClient("apache")
+            ktorClient("apache5")
+            ktorClient("java")
 
-        ktorClient("auth")
-        ktorClient("serialization")
-        ktorClient("encoding")
-        ktorClient("json")
-        ktorClient("gson")
-        ktorClient("jackson")
-        ktorClient("logging")
-        ktorClient("resources")
-        ktorClient("websockets")
+            ktorClient("auth")
+            ktorClient("serialization")
+            ktorClient("encoding")
+            ktorClient("json")
+            ktorClient("gson")
+            ktorClient("jackson")
+            ktorClient("logging")
+            ktorClient("resources")
+            ktorClient("websockets")
 
-        dependencies("io.ktor:ktor-serialization-kotlinx-xml-jvm:$ktorVersion")
+            add("io.ktor:ktor-serialization-kotlinx-xml-jvm:$ktorVersion")
+        }.toTypedArray())
 
         import("org.jetbrains.kotlinx.jupyter.ktor.client.core.*")
 

@@ -1,17 +1,15 @@
 [versions]
-kotlin = "2.0.20"
-ksp = "2.0.20-1.0.24"
+kotlin = "2.2.20"
 ktor = "2.3.13"
 kotlinx-serialization = "1.6.2"
 jvm-toolchain = "11"
-kotlin-jupyter = "0.12.0-421"
+kotlin-jupyter = "0.15.1-659"
 kotlinpoet = "2.1.0"
 dataframe = "0.15.0"
 libsPublisher = "1.9.23-dev-45"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-jupyter-api = { id = "org.jetbrains.kotlin.jupyter.api", version.ref = "kotlin-jupyter" }
 publisher = { id = "org.jetbrains.kotlin.libs.publisher", version.ref = "libsPublisher" }
 

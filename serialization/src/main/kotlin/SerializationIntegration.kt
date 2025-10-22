@@ -4,7 +4,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
 import org.jetbrains.kotlinx.jupyter.api.*
-import org.jetbrains.kotlinx.jupyter.api.annotations.JupyterLibrary
 import org.jetbrains.kotlinx.jupyter.api.libraries.FieldHandlerFactory
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
 import org.jetbrains.kotlinx.jupyter.api.libraries.TypeDetection
@@ -72,7 +71,6 @@ public fun String.deserializeJson(className: String? = null): DeserializeThis {
  * println(user.address.number + " " + user.address.street)
  * ```
  */
-@JupyterLibrary
 public class SerializationIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
         onLoaded {

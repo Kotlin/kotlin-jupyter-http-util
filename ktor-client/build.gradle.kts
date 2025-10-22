@@ -1,5 +1,4 @@
 plugins {
-    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.jupyter.api)
     alias(libs.plugins.publisher)
@@ -7,7 +6,12 @@ plugins {
 
 kotlinJupyter {
     addApiDependency()
-    addScannerDependency()
+}
+
+tasks.processJupyterApiResources {
+    libraryProducers = listOf(
+        "org.jetbrains.kotlinx.jupyter.ktor.client.KtorClientIntegration2"
+    )
 }
 
 dependencies {

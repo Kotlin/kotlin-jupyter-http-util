@@ -1,5 +1,4 @@
 plugins {
-    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.jupyter.api)
     alias(libs.plugins.publisher)
@@ -16,7 +15,12 @@ dependencies {
 
 kotlinJupyter {
     addApiDependency()
-    addScannerDependency()
+}
+
+tasks.processJupyterApiResources {
+    libraryProducers = listOf(
+        "org.jetbrains.kotlinx.jupyter.serialization.SerializationIntegration"
+    )
 }
 
 tasks.test {
