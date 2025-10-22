@@ -23,10 +23,6 @@ tasks.processJupyterApiResources {
     )
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
     explicitApi()

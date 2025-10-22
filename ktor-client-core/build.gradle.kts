@@ -22,9 +22,6 @@ dependencies {
     api(libs.ktor.serialization.kotlinx.json)
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
 kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
     explicitApi()

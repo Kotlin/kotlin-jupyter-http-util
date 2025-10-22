@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.2.20"
-ktor = "2.3.13"
-kotlinx-serialization = "1.6.2"
+ktor = "3.3.1"
+kotlinx-serialization = "1.9.0"
 jvm-toolchain = "11"
 kotlin-jupyter = "0.15.1-659"
 kotlinpoet = "2.1.0"

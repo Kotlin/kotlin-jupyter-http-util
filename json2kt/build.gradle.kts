@@ -11,9 +11,6 @@ dependencies {
     testImplementation(libs.kotlinx.serialization.json)
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
 kotlin {
     jvmToolchain(libs.versions.jvm.toolchain.get().toInt())
     explicitApi()

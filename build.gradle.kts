@@ -16,6 +16,11 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+        outputs.upToDateWhen { false }
+    }
 }
 
 kotlinPublications {

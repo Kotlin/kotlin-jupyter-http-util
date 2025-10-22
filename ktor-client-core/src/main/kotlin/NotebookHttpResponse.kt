@@ -1,12 +1,21 @@
 package org.jetbrains.kotlinx.jupyter.ktor.client.core
 
-import io.ktor.client.call.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.util.*
-import io.ktor.util.date.*
-import io.ktor.util.reflect.*
-import io.ktor.utils.io.*
+import io.ktor.client.call.DoubleReceiveException
+import io.ktor.client.call.HttpClientCall
+import io.ktor.client.call.NoTransformationFoundException
+import io.ktor.client.call.body
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.content
+import io.ktor.client.statement.readBytes
+import io.ktor.client.statement.readRawBytes
+import io.ktor.http.Headers
+import io.ktor.http.HttpProtocolVersion
+import io.ktor.http.HttpStatusCode
+import io.ktor.util.date.GMTDate
+import io.ktor.util.reflect.TypeInfo
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.InternalAPI
 import kotlinx.coroutines.runBlocking
 import java.nio.charset.Charset
 import kotlin.coroutines.CoroutineContext
@@ -18,7 +27,7 @@ import kotlin.coroutines.CoroutineContext
 public class NotebookHttpResponse(public val ktorResponse: HttpResponse) : HttpResponse() {
     override val call: HttpClientCall get() = ktorResponse.call
     @InternalAPI
-    override val content: ByteReadChannel get() = ktorResponse.content
+    override val rawContent: ByteReadChannel get() = ktorResponse.rawContent
     override val coroutineContext: CoroutineContext get() = ktorResponse.coroutineContext
     override val headers: Headers get() = ktorResponse.headers
     override val requestTime: GMTDate get() = ktorResponse.requestTime
@@ -58,7 +67,14 @@ public class NotebookHttpResponse(public val ktorResponse: HttpResponse) : HttpR
      * Reads the whole [HttpResponse.content] if `Content-Length` is specified.
      * Otherwise, it just reads one byte.
      */
-    public fun readBytes(): ByteArray = runBlocking { ktorResponse.readBytes() }
+    @Deprecated("Use readRawBytes() instead", ReplaceWith("readRawBytes()"))
+    public fun readBytes(): ByteArray = readRawBytes()
+
+    /**
+     * Reads the whole [HttpResponse.content] if `Content-Length` is specified.
+     * Otherwise, it just reads one byte.
+     */
+    public fun readRawBytes(): ByteArray = runBlocking { ktorResponse.readRawBytes() }
 
     /**
      * Reads exactly [count] bytes of the [HttpResponse.content].

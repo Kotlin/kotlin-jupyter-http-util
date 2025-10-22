@@ -5,6 +5,8 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.jetbrains.kotlinx.jupyter.api.declare
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
+import java.util.jar.Attributes
+import java.util.jar.Manifest
 
 /**
  * Usage:
@@ -29,7 +31,7 @@ import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
  */
 public class KtorClientCoreIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
-        val ktorVersion = "2.3.7"
+        val ktorVersion = findKtorVersion(Thread.currentThread().contextClassLoader)
 
         fun MutableList<String>.ktorClient(artifactName: String) {
             add("io.ktor:ktor-client-$artifactName-jvm:$ktorVersion")
@@ -70,4 +72,31 @@ public class KtorClientCoreIntegration : JupyterIntegration() {
             declare("http" to httpClient)
         }
     }
+}
+
+private fun findKtorVersion(classLoader: ClassLoader) =
+    requireNotNull(findModuleVersion("io.ktor.client.core", classLoader)) {
+        "Failed to find Ktor version for Ktor integration"
+    }
+
+/**
+ * Attempts to find the implementation version of a given module by inspecting the manifest files
+ * available in the provided class loader's resources.
+ */
+private fun findModuleVersion(
+    moduleName: String,
+    classLoader: ClassLoader,
+): String? {
+    val autoModuleKey = Attributes.Name("Automatic-Module-Name")
+    val implVersionKey = Attributes.Name.IMPLEMENTATION_VERSION
+
+    return classLoader.getResources("META-INF/MANIFEST.MF")
+        .asSequence()
+        .mapNotNull { url ->
+            runCatching {
+                url.openStream().use { Manifest(it) }
+            }.getOrNull()?.mainAttributes
+        }
+        .firstOrNull { it.getValue(autoModuleKey) == moduleName }
+        ?.getValue(implVersionKey)
 }
