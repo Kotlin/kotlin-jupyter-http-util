@@ -94,7 +94,8 @@ internal fun deduplicate(rootType: RootType, allClasses: Iterable<KotlinClass>):
 
     return RootType(
         name = rootType.name,
-        type = renameAndReplace(rootType.type, replace = replace, resultCache = IdentityHashMap())
+        type = renameAndReplace(rootType.type, replace = replace, resultCache = IdentityHashMap()),
+        isWrapped = rootType.isWrapped,
     )
 }
 
@@ -102,7 +103,7 @@ internal fun deduplicate(rootType: RootType, allClasses: Iterable<KotlinClass>):
  * This class describes the root type. If root type is a class, it should have [name] as its type.
  *  If root type is not a class, a type alias named [name] is generated.
  */
-internal class RootType(val name: KotlinClassName, val type: KotlinType)
+internal class RootType(val name: KotlinClassName, val type: KotlinType, val isWrapped: Boolean)
 
 /**
  * Renames classes that have the same name as some other classes, or names that are reserved.
@@ -174,7 +175,11 @@ internal fun disambiguate(rootType: RootType, allClasses: Iterable<KotlinClass>)
         ensureUniqueNames()
     }
 
-    return RootType(rootTypeName, renameAndReplace(rootType.type, rename = rename, resultCache = IdentityHashMap()))
+    return RootType(
+        name = rootTypeName,
+        type = renameAndReplace(rootType.type, rename = rename, resultCache = IdentityHashMap()),
+        isWrapped = rootType.isWrapped,
+    )
 }
 
 /**

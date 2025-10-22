@@ -146,9 +146,14 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     fun `empty array`() {
         end2end(
             json = "[]",
-            expectedGenerated = "public typealias Response = List<UntypedAny?>",
+            expectedGenerated = """
+                @Serializable
+                public data class Response(
+                    public val `value`: List<UntypedAny?>,
+                )
+            """.trimIndent(),
             expectedDeserialized = "[]",
-            imports = listOf(LIST, UNTYPED_ANY),
+            imports = listOf(LIST, SERIALIZABLE, UNTYPED_ANY),
         )
     }
 
@@ -188,9 +193,14 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
             json = """
                 [12, ""]
             """.trimIndent(),
-            expectedGenerated = "public typealias Response = List<UntypedAnyNotNull>",
+            expectedGenerated = """
+                @Serializable
+                public data class Response(
+                    public val `value`: List<UntypedAnyNotNull>,
+                )
+            """.trimIndent(),
             expectedDeserialized = "[12, ]",
-            imports = listOf(LIST, UNTYPED_ANY_NOT_NULL),
+            imports = listOf(LIST, SERIALIZABLE, UNTYPED_ANY_NOT_NULL),
         )
     }
 
@@ -198,9 +208,14 @@ class JsonSerializationIntegrationTest : JupyterReplTestCase() {
     fun `array with null`() {
         end2end(
             json = "[null]",
-            expectedGenerated = "public typealias Response = List<UntypedAny?>",
+            expectedGenerated = """
+                @Serializable
+                public data class Response(
+                    public val `value`: List<UntypedAny?>,
+                )
+            """.trimIndent(),
             expectedDeserialized = "[null]",
-            imports = listOf(LIST, UNTYPED_ANY),
+            imports = listOf(LIST, SERIALIZABLE, UNTYPED_ANY),
         )
     }
 

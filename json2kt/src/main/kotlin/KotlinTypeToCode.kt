@@ -17,7 +17,15 @@ import kotlinx.serialization.json.*
 public class GeneratedCodeResult(
     public val code: String,
     public val rootTypeName: String,
+
+    /**
+     * If true, deserialization input needs to be wrapped in a JSON object with a [JSON2KT_WRAPPER_FIELD_NAME] field,
+     * and deserialization output will also contain the underlying value in a [JSON2KT_WRAPPER_FIELD_NAME] field.
+     */
+    public val isWrapped: Boolean,
 )
+
+public const val JSON2KT_WRAPPER_FIELD_NAME: String = "value"
 
 /**
  * @param requestedRootTypeName the preferred name for the type to be deserialized.
@@ -31,11 +39,13 @@ public fun jsonDataToKotlinCode(json: JsonElement, requestedRootTypeName: String
             name = requestedRootTypeKcn,
             jsonSamples = listOf(json),
             parentClassName = if (json is JsonObject) null else requestedRootTypeKcn,
-        )
+        ),
+        isWrapped = false,
     )
+        .wrapIfNecessary()
         .let { deduplicate(rootType = it, it.collectAllClasses()) }
         .let { disambiguate(rootType = it, it.collectAllClasses()) }
-        .let { GeneratedCodeResult(code = generateCodeString(it), rootTypeName = it.name.value) }
+        .let { GeneratedCodeResult(code = generateCodeString(it), rootTypeName = it.name.value, isWrapped = it.isWrapped) }
 }
 
 /** Names in [simpleClassNames] are not allowed to be used as generated class names. */
@@ -141,4 +151,40 @@ private fun generateCodeString(rootType: RootType): String {
     val sb = StringBuilder()
     outputCodeForType(rootType.name.value, rootType.type, rootType.collectAllClasses()).writeTo(sb)
     return sb.trim().toString()
+}
+
+/**
+ * Root types which are essentially `Any` / `Any?` / `List<Any>` / etc. have to be wrapped in a class,
+ * because serialization fails otherwise,
+ * not being able to find a deserializer for `Any` (despite the `@Serializable` annotation on the type use).
+ * When a field of a wrapper has such a type, the serialization completes successfully.
+ */
+private fun RootType.wrapIfNecessary(): RootType {
+    if (!type.shouldWrap()) return this
+    return RootType(
+        name = name,
+        type = KotlinType.KtClass(
+            clazz = KotlinClass(
+                name = name,
+                properties = listOf(
+                    KotlinProperty(
+                        kotlinName = KotlinPropertyName(JSON2KT_WRAPPER_FIELD_NAME),
+                        jsonName = JsonName(JSON2KT_WRAPPER_FIELD_NAME),
+                        type = type,
+                    ),
+                ),
+            ),
+            nullable = false,
+        ),
+        isWrapped = true,
+    )
+}
+
+private tailrec fun KotlinType.shouldWrap(): Boolean = when (this) {
+    is KotlinType.KtAny -> true
+
+    is KotlinType.KtClass,
+    is KotlinType.Primitive -> false
+
+    is KotlinType.KtList -> this.elementType.shouldWrap()
 }

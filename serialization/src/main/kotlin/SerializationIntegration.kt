@@ -4,10 +4,13 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
 import org.jetbrains.kotlinx.jupyter.api.*
+import org.jetbrains.kotlinx.jupyter.api.createRenderer
+import org.jetbrains.kotlinx.jupyter.api.declare
 import org.jetbrains.kotlinx.jupyter.api.libraries.FieldHandlerFactory
 import org.jetbrains.kotlinx.jupyter.api.libraries.JupyterIntegration
 import org.jetbrains.kotlinx.jupyter.api.libraries.TypeDetection
 import org.jetbrains.kotlinx.jupyter.json2kt.GeneratedCodeResult
+import org.jetbrains.kotlinx.jupyter.json2kt.JSON2KT_WRAPPER_FIELD_NAME
 import org.jetbrains.kotlinx.jupyter.json2kt.jsonDataToKotlinCode
 import kotlin.reflect.typeOf
 
@@ -96,7 +99,7 @@ public class SerializationIntegration : JupyterIntegration() {
                     value is String && shouldHighlightAsJson(value) ||
                         value is DeserializeThis && shouldHighlightAsJson(value.jsonString)
                 },
-                renderAction = { it ->
+                renderAction = {
                     JSON(it.value as? String ?: (it.value as DeserializeThis).jsonString)
                 },
             )
@@ -105,12 +108,15 @@ public class SerializationIntegration : JupyterIntegration() {
         val fieldHandler = FieldHandlerFactory.createUpdateHandler<DeserializeThis>(TypeDetection.RUNTIME) { value, prop ->
             try {
                 val className = value.className ?: prop.name.replaceFirstChar(Char::titlecaseChar)
+                val generatedCode = getGeneratedCode(value.jsonString, className)
                 val escapedJson = value.jsonString
                     .replace("$", "\${'$'}")
-                val generatedCode = getGeneratedCode(value.jsonString, className)
+                    .let { if (generatedCode.isWrapped) "{\"value\": $it}" else it }
+
                 execute(
                     generatedCode.code + "\n" +
-                        "jsonDeserializer.decodeFromString<${generatedCode.rootTypeName}>(\"\"\"$escapedJson\"\"\")"
+                        "jsonDeserializer.decodeFromString<${generatedCode.rootTypeName}>(\"\"\"$escapedJson\"\"\")" +
+                        if (generatedCode.isWrapped) ".$JSON2KT_WRAPPER_FIELD_NAME" else ""
                 ).name
             } catch (e: Exception) {
                 display("Error during deserialization: ${e.cause?.message ?: e.message}", id = null)
@@ -122,11 +128,11 @@ public class SerializationIntegration : JupyterIntegration() {
 }
 
 internal fun getGeneratedCode(jsonString: String, className: String): GeneratedCodeResult {
-    return jsonDataToKotlinCode(Json.Default.parseToJsonElement(jsonString), requestedRootTypeName = className)
+    return jsonDataToKotlinCode(Json.parseToJsonElement(jsonString), requestedRootTypeName = className)
 }
 
 /**
- * Cleanup generated code so internal concepts do not leak to the user.
+ * Clean up generated code so internal concepts do not leak to the user.
  *
  * Currently, this includes:
  * - Swap `UntypedAnyNotNull` with `Any`
@@ -151,7 +157,7 @@ private fun shouldHighlightAsJson(jsonOrNot: String): Boolean {
         val element = Json.parseToJsonElement(jsonOrNot)
         ((element as? JsonObject)?.entries?.isNotEmpty() == true ||
             (element as? JsonArray)?.isNotEmpty() == true)
-    } catch (e: SerializationException) {
+    } catch (_: SerializationException) {
         false // Invalid JSON
     }
 }
