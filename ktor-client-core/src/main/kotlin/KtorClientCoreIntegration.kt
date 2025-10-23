@@ -31,7 +31,7 @@ import java.util.jar.Manifest
  */
 public class KtorClientCoreIntegration : JupyterIntegration() {
     override fun Builder.onLoaded() {
-        val ktorVersion = findKtorVersion(Thread.currentThread().contextClassLoader)
+        val ktorVersion = findKtorVersion(KtorClientCoreIntegration::class.java.classLoader)
 
         fun MutableList<String>.ktorClient(artifactName: String) {
             add("io.ktor:ktor-client-$artifactName-jvm:$ktorVersion")
