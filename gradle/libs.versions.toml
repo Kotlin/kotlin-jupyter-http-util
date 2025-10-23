@@ -6,7 +6,7 @@ jvm-toolchain = "11"
 kotlin-jupyter = "0.15.1-659"
 kotlinpoet = "2.1.0"
 dataframe = "0.15.0"
-libsPublisher = "1.9.23-dev-45"
+libsPublisher = "2.2.0-dev-71"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
