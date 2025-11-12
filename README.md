@@ -1,5 +1,13 @@
 # HTTP Utilities for Kotlin Jupyter
 
+> Deprecation notice (November 12, 2025)
+>
+> This repository is deprecated.
+> Further development has moved to the notebook integrations monorepo:
+> https://github.com/Kotlin/kotlin-notebook-integrations
+>
+> Please file new issues and pull requests in the monorepo. This repository is kept for historical reference only and is not actively maintained.
+
 [![JetBrains official project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Kotlin beta stability](https://img.shields.io/badge/project-beta-kotlin.svg?colorA=555555&colorB=AC29EC&label=&logo=kotlin&logoColor=ffffff&logoWidth=10)](https://kotlinlang.org/docs/components-stability.html)
 ![GitHub](https://img.shields.io/github/license/Kotlin/kotlin-jupyter-http-util?color=blue&label=License)
